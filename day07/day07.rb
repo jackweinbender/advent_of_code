@@ -1,8 +1,36 @@
-def contains_abba( str )
-    for i in 0...str.length - 3
-        puts "#{str[i]} and #{str[i+3]} || #{str[i+1]} #{str[i+2]}"
+
+class IPV
+    def initialize( str )
+        @head, @brackets, @tail = from_string(str)
+        @valid_ipv = valid_ipv(from_string(str))
     end
+    def from_string (str)
+        str.split(/[\[\]]/)
+    end
+    def contains_abba?( str )
+    str.scan(/([a-zA-Z])([^\1])\2\1/)
+        .any? { |m| m != nil && m[0] != m[1] }
+    end
+    def valid_ipv( arr )
+        if contains_abba?(arr[1]) then
+            false
+        elsif contains_abba?(arr[0]) || contains_abba?(arr[2])
+            true
+        else
+            false
+        end
+    end
+    def valid?
+        @valid_ipv
+    end
+    def to_string
+        puts "#{@head}[#{@brackets}]#{@tail}"
+    end
+    
 end
 
-
-contains_abba("Test")
+puts input = File.readlines("_test_data.txt")
+    .map { |line| IPV.new(line) }
+    .select { |ipv| ipv.valid? }
+    .map { |ipv| ipv.to_string() }
+    .length
