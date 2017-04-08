@@ -1,5 +1,1 @@
-abba[mnop]qrst
-abcd[bddb]xyyxabcd[asdf]xyyx[vvvdd]
-aaaa[qwer]tyui
-ioxxoj[asdfgh]zxcvbn
-abba[mnop]qrstacba[mnop]qrst
+aba[zyz]bcb[cbc]
