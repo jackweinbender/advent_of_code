@@ -24,7 +24,6 @@ class Pixel
     def print()
         puts "Pixel: x: #{@x}, y: #{@y}, val: #{@value}"
     end
-    
 end
 
 class Display
@@ -49,18 +48,41 @@ class Display
             i_set = i.split(' ')
             type = i_set.shift()
 
-
-            puts "set: #{i_set} || type: #{type}"
-
+            case type 
+                when "rect"
+                    # puts "rect"
+                    x, y = i_set[0].split('x')
+                    square(x.to_i, y.to_i)
+                when "rotate"
+                    axis = i_set[0]
+                    index = i_set[1].slice(/\d+/).to_i
+                    mag = i_set[3].to_i
+                    # puts "#{axis}, #{index}, #{mag}"
+                    rotate(axis, index, mag)
+                else 
+                    puts "Err"
+                end
+            print()
+            puts ""
          }
+    end
+    def rotate(axis, index, mag)
+        case axis
+            when "column"
+                # puts "shift col"
+                shift_col(index, mag)
+            when "row"
+                # puts "shift row"
+                shift_row(index, mag)
+            else
+                puts "Err"
+        end
     end
     def shift_row(row_index, magnitude)
         @pixels
             .each { |p| if p.y == row_index then 
                 p.shift_x(magnitude, @width)
             end }
-            .sort! { |a, b| a.y <=> b.y  }
-            .sort! { |a, b| a.x <=> b.x  }
     end
 
     def shift_col(col_index, magnitude)
@@ -68,9 +90,19 @@ class Display
             .each { |p| if p.x == col_index then 
                 p.shift_y(magnitude, @height)
             end }
-            .sort! { |a, b| a.y <=> b.y  }
-            .sort! { |a, b| a.x <=> b.x  }
-
+    end
+    def sort()
+        @pixels.sort! { |a, b| 
+            if a.y > b.y then 
+                1
+            elsif a.y < b.y then 
+                -1
+            elsif a.x > b.x then
+                1
+            else
+                -1
+            end
+        }
     end
     def square(x, y)
          @pixels.each { |p| 
@@ -79,25 +111,28 @@ class Display
             end
          }
     end
-    def toggle()
-        @pixels[0].toggle()
+    def count()
+        @pixels.select { |p| p.value }.length
+    end
+    def get_row(index)
+        @pixels.select { |p| p.y == index }
+            .sort { |a,b| a.x <=> b.x }
+            .map { |p| p.value }
+            .map { |p| p ? '#' : "." }
+            .join('')
     end
     def print()
-       @pixels.each { |p| p.print() }
-    end
-    
-        
+        for i in 0...@height
+            puts get_row(i)
+        end
+    end     
 end
 
-w = 7
-h = 3
 
-inst_arr = File.readlines('_test_data.txt')
-d = Display.new(w, h)
+inst_arr = File.readlines('_data.txt')
+d = Display.new(50,6)
 d.parse_instructions(inst_arr)
+puts "Lit Pixels: #{d.count()}"
 
-
-
-
-
-# d.print()
+# not 57 (too low)
+# not 65 (too low)
