@@ -66,8 +66,15 @@ class State
     end
 end
 
-
+# Part 1
 state = {
+    generators:[["pr"], ["co", "cu", "ru", "pl"], [], []],
+    microchips:[["pr"], [], ["co", "cu", "ru", "pl"], []],
+    elevator: 0
+}
+
+#Part 2
+state_2 = {
     generators:[["pr"], ["co", "cu", "ru", "pl"], [], []],
     microchips:[["pr"], [], ["co", "cu", "ru", "pl"], []],
     elevator: 0
@@ -77,10 +84,11 @@ queue = Queue.new
 visited = []
 
 queue << State.new(state, 0)
-i = 0
+i = 1
 while not queue.empty?
     i = i+1
     if  i % 1000 == 0 then
+        i=1
         puts "Steps: #{state.steps} | #{state.to_s}"
     end
     state = queue.shift
