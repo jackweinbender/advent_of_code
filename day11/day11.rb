@@ -66,7 +66,7 @@ class State
     end
 end
 
-# Part 1
+# Part 1 Answer 33
 state = {
     generators:[["pr"], ["co", "cu", "ru", "pl"], [], []],
     microchips:[["pr"], [], ["co", "cu", "ru", "pl"], []],
