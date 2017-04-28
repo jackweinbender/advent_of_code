@@ -21,7 +21,7 @@ class Register
             case @instructions[idx].type
             when 'jnz'
                 idx = jump(idx, @instructions[idx].instructions)
-                puts "jump to index #{idx}: #{@register}"
+                #puts "jump to index #{idx}: #{@register}"
             when 'inc'
                 increment(@instructions[idx].instructions[0])
                 idx = idx + 1
@@ -39,11 +39,11 @@ class Register
     end
     def increment(reg)
         @register[reg.to_sym] += 1
-        puts "inc #{reg}: #{@register}"
+        #puts "inc #{reg}: #{@register}"
     end
     def decrement(reg)
         @register[reg.to_sym] -= 1
-        puts "dec #{reg}: #{@register}"
+        #puts "dec #{reg}: #{@register}"
     end
     def copy(instr)
         if instr[0].match(/[0-9]/)
@@ -51,7 +51,7 @@ class Register
         else
             @register[instr[1].to_sym] = @register[instr[0].to_sym]
         end
-        puts "copy #{instr[0]} to #{instr[1]}: #{@register}"
+        #puts "copy #{instr[0]} to #{instr[1]}: #{@register}"
     end
     def jump(curr_index, instr)
         if @register[instr[0].to_sym] == 0
@@ -61,17 +61,17 @@ class Register
         end
     end
     def to_string
-        puts "#{@register}"
+        #puts "#{@register}"
     end
 end
 
 # Answer 1 :a=>318007
-
+# Answer 2 :a=>9227661
 input = File.readlines('_data.txt')
 register = {
     :a => 0,
     :b => 0,
-    :c => 0,
+    :c => 1,
     :d => 0
 }
 
