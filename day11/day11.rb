@@ -10,11 +10,23 @@ class State
         @step
     end
     def complete?
+        if @elevator != 3 then false end
         @generators[0..2].flatten.empty? && @microchips[0..2].flatten.empty?
     end
 
     def to_s
-        "gens: #{@generators}, chips: #{@microchips}, el: #{@elevator}"
+        # This is the key optimization of the project
+        # Basically, nodes with the same quantities of pair/unique
+        # values are, essenitally the same. So, we use the count of
+        # each value type as the hash.
+        floors = @generators.zip(@microchips)
+            .map{ |g,m| { 
+                pairs: (g & m).length,
+                gens: (g-m).length,
+                chips: (m-g).length
+                }
+            }
+            "#{@elevator}, #{floors}" # include the elevator pos in the hash
     end
     def valid?
         (0..3).all? { |floor| floor_valid?(floor) }
@@ -75,15 +87,15 @@ state = {
 
 #Part 2
 state_2 = {
-    generators:[["pr"], ["co", "cu", "ru", "pl"], [], []],
-    microchips:[["pr"], [], ["co", "cu", "ru", "pl"], []],
+    generators:[["el", "di", "pr"], ["co", "cu", "ru", "pl"], [], []],
+    microchips:[["el", "di", "pr"], [], ["co", "cu", "ru", "pl"], []],
     elevator: 0
 }
 
 queue = Queue.new 
 visited = []
 
-queue << State.new(state, 0)
+queue << State.new(state_2, 0)
 i = 1
 while not queue.empty?
     i = i+1
