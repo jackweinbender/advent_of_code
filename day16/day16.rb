@@ -1,15 +1,12 @@
 
 def dragonize(string, length)
-    # puts string
-    string if length == string.length
-    if length <  string.length
-        string[0, length]
-    else
+    until length <= string.length
         reversed = string.reverse
         string << "0"
         string << reversed.chars.map { |c| c == "0" ? "1" : "0" }.join('')
-        dragonize(string, length)
     end
+    string if length == string.length
+    string[0, length]
 end
 
 def get_checksum(string)
