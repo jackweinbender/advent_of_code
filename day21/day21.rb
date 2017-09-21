@@ -5,7 +5,7 @@ class Instruction
     end
     def mutate(str)
         p = parse_params(@type, str)
-        case type 
+        case @type 
         when "rotate"
             rotate(str, p)
         when "swap"
@@ -19,7 +19,6 @@ class Instruction
         end
     end
     def rotate(str, params)
-        # puts [str, params]
         if params[0] == "right"
             tail= str.slice!(0 - params[1], params[1])
             tail << str
@@ -29,13 +28,38 @@ class Instruction
         end
     end
     def swap(str, params)
+        if params[0] == 'pos'
+            ind_x = params[1]
+            ind_y = params[2]
+
+            x = str[ind_x]
+            y = str[ind_y]
+        else
+            ind_x = str.index(params[1])
+            ind_y = str.index(params[2])
+
+            x = params[1]
+            y = params[2]
+        end
+        str[ind_x] = y
+        str[ind_y] = x
+
         str
     end
     def reverse(str, params)
-        #[str, params]
-        str
+        s = params[0]
+        e = params[1]
+
+        pre     = str[0...s]
+        rev     = str[s..e].reverse
+        post    = str[e+1..-1]
+        
+        pre << rev << post
     end
     def move(str, params)
+        ch = str[params[0]]
+        str.delete! ch
+        str.insert(params[1], ch)
         str
     end
     def parse_params(type, str)
@@ -48,16 +72,30 @@ class Instruction
             else
             # rotate based on position of letter g
                 dir = "right"
-                amount = str.index(@params[-1])
+                amount = str.index(@params[-1]) + 1
+
+                if amount > 4
+                    amount = amount + 1
+                end
             end
-            [dir, amount]
+            [dir, amount % str.length ]
         when "swap"
-            # swap position 4 with position 1
+            if @params[0] == 'position'
+                t = 'pos'
+                x = @params[1].to_i
+                y = @params[4].to_i
+            else
+                t = 'letter'
+                x = @params[1]
+                y = @params[4]
+            end
+            [t, x, y]
         when "reverse"
             # reverse positions 2 through 3
-            [@params[1], @params[3]]
+            [@params[1].to_i, @params[3].to_i]
         when "move"
-            
+            # move position 1 to position 4
+            [@params[1].to_i, @params[4].to_i]
         else
         throw "Irregular instruction type!"
         end    
@@ -71,15 +109,29 @@ class Password
     end
     def scramble
         for inst in @instrs
-            puts "#{@pwd}"
+            print "#{@pwd} >> "
             @pwd = inst.mutate(@pwd)
+            puts "#{@pwd}"
         end
         @pwd
     end
+    def get_pwd
+        @pwd
+    end
 end
+
+test_input = File.readlines('test_input.txt')
+    .map {|l| Instruction.new(l)}
+
+
+test = Password.new("abcde", test_input).scramble
+
+print "Test Passing: "
+puts 'decab' == test
 
 
 input = File.readlines('input.txt')
     .map { |l| Instruction.new(l) }
 
-Password.new("abcdefgh", input).scramble
+
+puts  "Answer #1: " << Password.new("abcdefgh", input).scramble
