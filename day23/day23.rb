@@ -21,6 +21,9 @@ class Instr
             end
         end
     end
+    def stringify()
+        "#{@type}: [#{@instructions}]"
+    end
 end
 
 
@@ -34,6 +37,25 @@ class Register
     def execute
         idx = 0
         while idx < @instructions.length do
+            # puts "#{idx}: #{@instructions[idx].stringify()}"
+            
+            ##############################
+            #### Manual Optimisations ####
+            ###############################
+            if idx == 5 && @register[:d] > 0
+                @register[:a] += ( @register[:c] * @register[:d] )
+                @register[:c] = 0
+                @register[:d] = 0
+                idx = 10
+            end
+            if idx == 21
+                @register[:a] += @register[:d]
+                @register[:d] = 0
+                idx = 24
+            end
+            ###############################
+            ###############################
+            ###############################
             case @instructions[idx].type
             when 'jnz'
                 idx = jump(idx, @instructions[idx].instructions)
@@ -103,7 +125,7 @@ test_register = {
 }
 input = File.readlines('input.txt')
 register = {
-    :a => 7,
+    :a => 12,
     :b => 0,
     :c => 0,
     :d => 0
@@ -112,3 +134,4 @@ register = {
 puts Register.new(input, register).execute()
 
 # Answer #1 {:a=>12480, :b=>1, :c=>0, :d=>0}
+# Answer #2 {:a=>479009040, :b=>1, :c=>0, :d=>0}
