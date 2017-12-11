@@ -108,6 +108,7 @@ waypoint_distances = waypoints.product(waypoints)
     
 answer = waypoints.permutation().to_a
     .select{|n| n[0].id == 0}
+    .map {|n| [n, n[0]].flatten }
     .map{ |x| x.map {|y| y.id } }
     .map{|x| 
         l = 0
@@ -124,6 +125,6 @@ answer = waypoints.permutation().to_a
         l
     }.min
 
-puts "Answer #1\n----"
+puts "Answer #2\n----"
 puts "Shortest path: #{answer}"
 
