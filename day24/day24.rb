@@ -5,7 +5,10 @@ class Astar
         @visited    = []
     end
     def heuristic(s, e)
-        (s.x - e.x).abs + (s.y - e.y).abs
+        a = (s.x - e.x).abs 
+        b = (s.y - e.y).abs
+
+        a + b
     end
     def nexts(node)
         [[0,1],[0,-1],[1,0],[-1,0]]
@@ -17,7 +20,7 @@ class Astar
             .reject { |n| @visited.include?(n) }
     end
     def search(start_node, end_node)
-        
+        @visited = []
         init = {priority: 0, node: start_node, steps: 0}
         queue = [init]
         
@@ -39,13 +42,35 @@ class Astar
             }
             
             @visited.push(current[:node])
-            queue.sort! { |a,b| a[1] <=> b[1] }
+            # puts current[:priority]
+            queue.sort! { |a,b| a[:priority] <=> b[:priority] }
         end
         
     end
 end
 
-class Node
+class Grid
+    attr_accessor :hash
+    def initialize(grid)
+        @hash = parse(grid)
+    end
+    def parse(str)
+        grid = Hash.new()
+        str.split("\n").each_with_index { |line, y|
+            line.split("").each_with_index { |ch, x|
+                node = GridNode.new(ch, [x, y])
+                hash = node.pos 
+                grid[hash] = node
+            }
+        }
+        grid
+    end
+    def get_waypoints()
+        @hash.to_a.select { |n| n[1].type == :waypoint }
+    end
+end
+
+class GridNode
     attr_accessor :type, :x, :y, :id
     def initialize(ch, pos)
         @type = case ch
@@ -65,32 +90,40 @@ class Node
     end
 end
 
-class Grid
-    attr_accessor :hash
-    def initialize(grid)
-        @hash = parse(grid)
-    end
-    def parse(str)
-        grid = Hash.new()
-        str.split("\n").each_with_index { |line, y|
-            line.split("").each_with_index { |ch, x|
-                node = Node.new(ch, [x, y])
-                hash = node.pos 
-                grid[hash] = node
-            }
+input = File.read("input.txt")
+astr = Astar.new(input)
+
+waypoints = astr.grid.hash.to_a
+    .select {|n| n[1].type == :waypoint}
+    .map {|n| n[1]}
+
+waypoint_distances = waypoints.product(waypoints)
+    .map{|pair| pair.sort {|a,b| a.id <=> b.id} }
+    .uniq
+    .reject {|pair| pair[0].id == pair[1].id}
+    .map{|pair|
+        path = "#{pair[0].id}-#{pair[1].id}"
+        [path, astr.search(pair[0], pair[1])]
+    }.to_h
+    
+answer = waypoints.permutation().to_a
+    .select{|n| n[0].id == 0}
+    .map{ |x| x.map {|y| y.id } }
+    .map{|x| 
+        l = 0
+        x.each_with_index {|n, i|
+            if i <= 0
+                0
+            else
+                a = x[i-1]
+                b = x[i]
+                k = [a,b].sort
+                l += waypoint_distances["#{k[0]}-#{k[1]}"]
+            end
         }
-        grid
-    end
-    def get_waypoints()
-        @hash.to_a.select { |n| n[1].type == :waypoint }
-    end
-end
+        l
+    }.min
 
-test = File.read("test_input.txt")
-
-astr = Astar.new(test)
-
-start_node  = astr.grid.hash["1-1"]
-end_node    = astr.grid.hash["1-3"]
-puts astr.search(start_node, end_node)
+puts "Answer #1\n----"
+puts "Shortest path: #{answer}"
 
