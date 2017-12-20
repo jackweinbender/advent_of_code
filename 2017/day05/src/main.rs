@@ -8,47 +8,26 @@ fn main() {
 
 type Instruction = i32;
 type Index = i32;
-type InstructionSet = HashMap<Index, Instruction>;
+type InstructionSet = Vec<Instruction>;
 
 
 fn run(input: &str) -> i32 {
     let mut instruction_set = process(input);
-    let mut index = 0;
+    let mut index: i32 = 0;
     let mut count = 0;
-    loop {
-        match step(&instruction_set, &index){
-            Some(value) => {
-                instruction_set.insert(index, value + 1);
-                index += value;
-                count += 1;
-            }
-            None => { break; }
-        }
+
+    while let Some(i) = instruction_set.get_mut(index as usize){
+        index += *i;
+        *i += 1;
+        count += 1;
     }
     count
 }
 
-fn step(instr: &InstructionSet, index: &Index) -> Option<Instruction> {
-    // println!("{:?}", index);
-    if instr.contains_key(&index) {
-        let v = *instr.get(index).unwrap();
-        Some(v)
-    } else {
-        None
-    }
-}
 fn process(input: &str) -> InstructionSet {
-    let mut instruction_set = InstructionSet::new();
-    let lines = (0..).zip(input.lines());
-
-    for (idx, val) in lines {
-        let v = Instruction::from_str_radix(val, 10)
-            .expect("Error processing file");
-        let k = idx;
-        
-        instruction_set.insert(k, v);
-    }
-    instruction_set
+    input.lines()
+        .filter_map(|v| v.parse::<i32>().ok())
+        .collect()
 }
 
 #[cfg(test)]
