@@ -7,7 +7,7 @@ fn main() {
     println!("Answer #2: {}", first_val_over(input));
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Debug)]
 struct Node(i32, i32, Compass);
 impl Node {
     fn turn(&self) -> Node {
@@ -54,12 +54,11 @@ impl Node {
         self.0.abs() + self.1.abs()
     }
     fn to_str(&self) -> String {
-        let s = format!("x{}y{}", self.0, self.1).clone();
-        s
+        format!("x{}y{}", self.0, self.1)
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Debug)]
 enum Compass {
     North,
     South,
@@ -77,11 +76,10 @@ fn walk(distance: i32) -> Node {
     let mut current = Node(0, 0, Compass::South);
     
     for _ in 1..distance {
-        let curr = current.clone();
-        let turn = curr.turn().to_str();
 
-        visited.insert(curr.to_str());
-        
+        visited.insert(current.to_str());
+        let turn = current.turn().to_str();
+
         match visited.contains(&turn) {
             true => { current = current.straight(); }
             _ => { current = current.turn(); }
