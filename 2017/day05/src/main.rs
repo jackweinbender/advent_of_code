@@ -1,9 +1,8 @@
-use std::collections::HashMap;
-
 fn main() {
     let input = include_str!("input.txt");
 
-    println!("Answer #1: {}", run(input))
+    println!("Answer #1: {}", increment(input));
+    println!("Answer #2: {}", decrement(input));
 }
 
 type Instruction = i32;
@@ -11,9 +10,9 @@ type Index = i32;
 type InstructionSet = Vec<Instruction>;
 
 
-fn run(input: &str) -> i32 {
+fn increment(input: &str) -> Index {
     let mut instruction_set = process(input);
-    let mut index: i32 = 0;
+    let mut index: Index = 0;
     let mut count = 0;
 
     while let Some(i) = instruction_set.get_mut(index as usize){
@@ -23,10 +22,25 @@ fn run(input: &str) -> i32 {
     }
     count
 }
+fn decrement(input: &str) -> Index {
+    let mut instruction_set = process(input);
+    let mut index: Index = 0;
+    let mut count = 0;
+
+    while let Some(i) = instruction_set.get_mut(index as usize){
+        index += *i;
+        match i {
+            _ if *i >= 3 => { *i -= 1; }
+            _ => { *i += 1; }
+        }
+        count += 1;
+    }
+    count
+}
 
 fn process(input: &str) -> InstructionSet {
     input.lines()
-        .filter_map(|v| v.parse::<i32>().ok())
+        .filter_map(|v| v.parse::<Index>().ok())
         .collect()
 }
 
@@ -34,8 +48,13 @@ fn process(input: &str) -> InstructionSet {
 mod test {
     use super::*;
     #[test]
-    fn test_count_steps() {
+    fn test_count_steps_inc() {
         let input = include_str!("test_input.txt");
-        assert_eq!(run(input), 5);
+        assert_eq!(increment(input), 5);
+    }
+    #[test]
+    fn test_count_steps_dec() {
+        let input = include_str!("test_input.txt");
+        assert_eq!(decrement(input), 10);
     }
 }
