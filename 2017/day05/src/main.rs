@@ -60,5 +60,3 @@ mod test {
         assert_eq!(run(input), 5);
     }
 }
-
-// Answer #1: 358309 <- WAY TOO LONG TO GET THIS
