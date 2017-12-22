@@ -13,7 +13,7 @@ type State = Memory;
 type Path = HashSet<Memory>;
 
 fn first_loop(input: &str) -> u32 {
-    println!("##### DEBUG #####");
+    // println!("##### DEBUG #####");
     let mut memory: Memory = input
         .split_whitespace()
         .map(|x| x.parse::<Bank>().unwrap())
@@ -32,7 +32,7 @@ fn first_loop(input: &str) -> u32 {
                     (i, v)
                 },
             );
-            println!("DEBUG: max:{:?} at index: {:?} \t {:?}", max, index, memory);
+            // println!("DEBUG: max:{:?} at index: {:?} \t {:?}", max, index, memory);
             let mut dist = max;
             let len = &memory.len();
 
@@ -44,7 +44,7 @@ fn first_loop(input: &str) -> u32 {
                 if dist > 0 {
                     if let Some(&mut value) = memory.get_mut(i) {
                         memory[i] = value + 1;
-                        println!("--- Adding 1 to {} at index {}\t {:?}", value, i, memory);
+                        // println!("--- Adding 1 to {} at index {}\t {:?}", value, i, memory);
                         dist -= 1;
                     }
                     
