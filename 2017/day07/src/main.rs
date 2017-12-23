@@ -10,15 +10,8 @@ fn get_root(input: &str) -> &str {
     let mut program_list = input.lines().into_iter().map(|x| Program::from_str(x));
     let mut graph = HashMap::new();
 
-    for p in program_list {
-        graph.insert(p.id, p);
-    }
-
-    for k in graph {
-        for c in k.children {
-            println!("{}", c);
-        }
-    }
+    program_list.filter(|x| x.children != None);
+    program
     "JACK"
 }
 
