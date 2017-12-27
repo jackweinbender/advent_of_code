@@ -13,7 +13,7 @@ fn main() {
 }
 
 fn get_root(input: &'static str) -> PID {
-    let mut program_list: Vec<Program> = input
+    let program_list: Vec<Program> = input
         .lines()
         .into_iter()
         .map(|x| Program::from_str(x))
@@ -34,7 +34,7 @@ fn get_root(input: &'static str) -> PID {
 }
 
 fn get_unbalanced_node_corrected(input: &'static str) -> Weight {
-    let mut program_list: Vec<Program> = input
+    let program_list: Vec<Program> = input
         .lines()
         .into_iter()
         .map(|x| Program::from_str(x))
@@ -96,13 +96,6 @@ impl Program {
             None => return self.weight,
         }
     }
-    fn get_siblings(&self, graph: &Graph) -> Option<Vec<Program>> {
-        let parent = self.get_parent(graph).unwrap();
-        match graph.get(parent) {
-            Some(x) => { x.get_children(&graph) }
-            None => { None }
-        }
-    }
     fn get_children(&self, graph: &Graph) -> Option<Vec<Program>> {
         match self.children {
             Some(ref ch) => {
@@ -132,7 +125,7 @@ impl Program {
     }
     fn from_str(input: &'static str) -> Program {
         match input.find("->") {
-            Some(index) => {
+            Some(_) => {
                 let head_tail: Vec<&str> = input.split(" -> ").collect();
                 let d: Vec<&str> = head_tail[0].split_whitespace().collect();
 
