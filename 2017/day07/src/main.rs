@@ -21,7 +21,7 @@ fn get_root(input: &'static str) -> PID {
     let mut graph = Graph::new();
 
     for i in &program_list {
-        graph.insert(i.id.clone(), i.clone());
+        graph.insert(i.pid.clone(), i.clone());
     }
 
     let mut node = program_list.last().unwrap();
@@ -30,7 +30,7 @@ fn get_root(input: &'static str) -> PID {
         node = &graph.get(n).clone().unwrap();
     }
 
-    node.id
+    node.pid
 }
 
 fn get_unbalanced_node_corrected(input: &'static str) -> Weight {
@@ -42,36 +42,44 @@ fn get_unbalanced_node_corrected(input: &'static str) -> Weight {
     let mut graph = Graph::new();
 
     for i in &program_list {
-        graph.insert(i.id.clone(), i.clone());
+        graph.insert(i.pid.clone(), i.clone());
     }
     
     let mut pid = get_root(input);
+    let mut nd = ("",0,0);
     while let Some(n) = next_unbalanced(pid, &graph) {
-        println!("{:?}", pid);
-        pid = n;
+        nd = n.clone();
+        pid = n.0;
     }
-0
+    let change: i32 = (nd.2 as i32 - nd.1 as i32) + graph.get(nd.0).unwrap().weight as i32;
+    return change as Weight
 }
-fn next_unbalanced(pid: PID, graph: &Graph) -> Option<PID> {
+fn next_unbalanced(pid: PID, graph: &Graph) -> Option<(PID, Weight, Weight)> {
     let node = graph.get(pid).unwrap();
     let children = node.get_children(&graph);
     
-    let weights: Vec<usize> = children.unwrap().into_iter().map(|x| x.get_weight(&graph) ).collect();
+    let weights: Vec<(PID, Weight)> = children.unwrap().into_iter().map(|x| (x.pid, x.get_weight(&graph)) ).collect();
 
-    let num_weights = weights.len().clone();
-    let cmp = weights[0].clone();
+    let mut acc = HashMap::new();
 
-    if cmp == weights.into_iter().fold(0, |x, y| x + y ) / num_weights {
-        return None;
+    for next in weights.clone() { 
+        if acc.clone().contains_key(&next.1) {
+            let mut x = acc.get_mut(&next.1).unwrap();
+            *x += 1; 
+        } else {
+            acc.insert(next.1, 1);
+        }
     }
-
-    // Figure out how to return the unbalanced Node here
-    None // Remove when you get this
+    if acc.len() == 1 { return None; }
+    let next_weight  = acc.iter().clone().min_by(|x, y| x.1.cmp(y.1) ).unwrap();
+    let normal_weight = *acc.iter().clone().max_by(|x, y| x.1.cmp(y.1) ).unwrap().0;
+    let next_node: Vec<(&str, usize)> = weights.iter().filter(|x| x.1 == *next_weight.0).map(|x| *x ).collect();
+    Some((next_node[0].0, next_node[0].1, normal_weight ))
 }
 
 #[derive(Debug, PartialEq, Clone)]
 struct Program {
-    id: PID,
+    pid: PID,
     children: Option<Vec<PID>>,
     weight: usize,
 }
@@ -86,6 +94,13 @@ impl Program {
                 return ch_weight + self.weight;
             },
             None => return self.weight,
+        }
+    }
+    fn get_siblings(&self, graph: &Graph) -> Option<Vec<Program>> {
+        let parent = self.get_parent(graph).unwrap();
+        match graph.get(parent) {
+            Some(x) => { x.get_children(&graph) }
+            None => { None }
         }
     }
     fn get_children(&self, graph: &Graph) -> Option<Vec<Program>> {
@@ -106,7 +121,7 @@ impl Program {
         for (k, v) in graph {
             match v.children {
                 Some(ref chs) => {
-                    if chs.iter().any(|x| *x == self.id) {
+                    if chs.iter().any(|x| *x == self.pid) {
                         return Some(k);
                     }
                 }
@@ -122,7 +137,7 @@ impl Program {
                 let d: Vec<&str> = head_tail[0].split_whitespace().collect();
 
                 Program {
-                    id: d[0],
+                    pid: d[0],
                     weight: d[1]
                         .replace('(', "")
                         .replace(')', "")
@@ -135,7 +150,7 @@ impl Program {
             None => {
                 let d: Vec<&'static str> = input.split_whitespace().collect();
                 Program {
-                    id: d[0],
+                    pid: d[0],
                     weight: d[1]
                         .replace('(', "")
                         .replace(')', "")
@@ -156,7 +171,7 @@ mod test {
 
         let input_1 = "fwft (72) -> ktlj, cntj, xhth";
         let pgm_1 = Program {
-            id: "fwft",
+            pid: "fwft",
             weight: 72,
             children: Some(vec!["ktlj", "cntj", "xhth"]),
         };
@@ -164,7 +179,7 @@ mod test {
 
         let input_2 = "qoyq (66)";
         let pgm_2 = Program {
-            id: "qoyq",
+            pid: "qoyq",
             weight: 66,
             children: None,
         };
