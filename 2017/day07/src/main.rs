@@ -1,21 +1,45 @@
 use std::collections::HashMap;
 
+type Graph = HashMap<&'static str, Program<'static>>;
+
 fn main() {
     let input = include_str!("input.txt");
 
-    // println!("Answer #1: {}", );
+    println!("Answer #1: {}", get_root(input));
 }
 
-fn get_root(input: &str) -> &str {
-    let mut program_list = input.lines().into_iter().map(|x| Program::from_str(x));
-    let mut graph = HashMap::new();
+fn get_root(input: &'static str) -> &str {
+    let mut program_list: Vec<Program> = input.lines().into_iter().map(|x| Program::from_str(x)).collect();
+    let mut graph = Graph::new();
+    
+    for i in &program_list {
+        graph.insert(i.id.clone(), i.clone());
+    }
 
-    program_list.filter(|x| x.children != None);
-    program
-    "JACK"
+    let mut node = program_list.last().unwrap();
+
+    while let Some(n) = get_parent(node.id, &graph) {
+        node = &graph.get(n).clone().unwrap();
+    }
+
+    node.id
 }
 
-#[derive(Debug,PartialEq)]
+fn get_parent(id: &str, graph: &Graph) -> Option<&'static str> {
+    for (k,v) in graph {
+        match v.children {
+            Some(ref chs) => { 
+                if chs.iter().any(|x| *x == id ) {
+                    return Some(k);
+                }
+            }
+            _ => { continue }
+        }
+    }
+    None
+}
+
+#[derive(Debug,PartialEq, Clone)]
 struct Program<'a> {
     id: &'a str,
     children: Option<Vec<&'a str>>,
