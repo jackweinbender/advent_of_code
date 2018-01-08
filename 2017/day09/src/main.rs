@@ -3,6 +3,8 @@ type Score = usize;
 
 fn main() {
     let input = include_str!("input.txt");
+
+    println!("Answer #1: {}", score(input));
 }
 
 fn score(input: &str) -> Score {
