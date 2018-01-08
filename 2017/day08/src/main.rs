@@ -11,9 +11,18 @@ fn main() {
     println!("Answer #1: {}", cpu.iter().map(|(k,v)| v ).max().unwrap());
 }
 
+struct CPU (HashMap<RegisterKey, RegisterValue>);
+impl CPU {
+    fn apply_instruction(&self, instruction: Instruction) -> () {
+        // Apply the instruction to the appropriate registers
+
+        
+    }
+}
+
 type RegisterKey = &'static str;
 type RegisterValue = isize;
-type CPU = HashMap<RegisterKey, RegisterValue>;
 
 type Instruction = &'static str;
 type InstructionSet = Vec<Instruction>;
+
