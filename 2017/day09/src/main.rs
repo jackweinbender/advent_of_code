@@ -11,7 +11,7 @@ fn main() {
 
 fn score(input: &str) -> Score {
     let mut input_iter = input.chars();
-    
+
     let mut total = 0 as Score;
     let mut state = Parser::Stream;
     let mut depth = 0 as Depth;
@@ -24,19 +24,27 @@ fn score(input: &str) -> Score {
                         depth += 1;
                         total += depth;
                     }
-                    '}' => { depth -= 1; }
-                    '<' => { state = Parser::Garbage; }
+                    '}' => {
+                        depth -= 1;
+                    }
+                    '<' => {
+                        state = Parser::Garbage;
+                    }
                     _ => {} // Proceed
                 }
-            },
+            }
             Parser::Garbage => {
                 match ch {
-                    '>' => { state = Parser::Stream; }
-                    '!' => { state = Parser::Skip; }
+                    '>' => {
+                        state = Parser::Stream;
+                    }
+                    '!' => {
+                        state = Parser::Skip;
+                    }
                     _ => {} // Proceed
                 }
-            },
-            Parser::Skip => { state = Parser::Garbage }
+            }
+            Parser::Skip => state = Parser::Garbage,
         }
     }
     total
@@ -44,7 +52,7 @@ fn score(input: &str) -> Score {
 
 fn score_skipped(input: &str) -> Score {
     let mut input_iter = input.chars();
-    
+
     let mut total_skipped = 0 as Score;
     let mut state = Parser::Stream;
 
@@ -52,28 +60,36 @@ fn score_skipped(input: &str) -> Score {
         match state {
             Parser::Stream => {
                 match ch {
-                    '<' => { state = Parser::Garbage; }
+                    '<' => {
+                        state = Parser::Garbage;
+                    }
                     _ => {} // Proceed
                 }
-            },
+            }
             Parser::Garbage => {
                 match ch {
-                    '>' => { state = Parser::Stream; }
-                    '!' => { state = Parser::Skip; }
-                    _ => { total_skipped += 1; } // Proceed
+                    '>' => {
+                        state = Parser::Stream;
+                    }
+                    '!' => {
+                        state = Parser::Skip;
+                    }
+                    _ => {
+                        total_skipped += 1;
+                    } // Proceed
                 }
-            },
-            Parser::Skip => { state = Parser::Garbage }
+            }
+            Parser::Skip => state = Parser::Garbage,
         }
     }
     total_skipped
 }
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 enum Parser {
     Stream,
     Garbage,
-    Skip
+    Skip,
 }
 
 
@@ -81,7 +97,7 @@ enum Parser {
 mod test {
     use super::*;
     #[test]
-    fn test_score(){
+    fn test_score() {
         assert_eq!(1, score("{}"));
         assert_eq!(6, score("{{{}}}"));
         assert_eq!(5, score("{{},{}}"));
@@ -92,7 +108,7 @@ mod test {
         assert_eq!(3, score("{{<a!>},{<a!>},{<a!>},{<ab>}}"));
     }
     #[test]
-    fn test_score_skipped(){
+    fn test_score_skipped() {
         assert_eq!(0, score_skipped("<>"));
         assert_eq!(17, score_skipped("<random characters>"));
         assert_eq!(3, score_skipped("<<<<>"));
