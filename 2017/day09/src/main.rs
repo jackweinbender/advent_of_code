@@ -1,5 +1,6 @@
 
 type Score = usize;
+type Depth = usize;
 
 fn main() {
     let input = include_str!("input.txt");
@@ -8,9 +9,44 @@ fn main() {
 }
 
 fn score(input: &str) -> Score {
-    unimplemented!();
+    let mut input_iter = input.chars();
+    
+    let mut total = 0 as Score;
+    let mut state = Parser::Stream;
+    let mut depth = 0 as Depth;
+
+    while let Some(ch) = input_iter.next() {
+        match state {
+            Parser::Stream => {
+                match ch {
+                    '{' => {
+                        depth += 1;
+                        total += depth;
+                    }
+                    '}' => { depth -= 1; }
+                    '<' => { state = Parser::Garbage; }
+                    _ => {} // Proceed
+                }
+            },
+            Parser::Garbage => {
+                match ch {
+                    '>' => { state = Parser::Stream; }
+                    '!' => { state = Parser::Skip; }
+                    _ => {} // Proceed
+                }
+            },
+            Parser::Skip => { state = Parser::Garbage }
+        }
+    }
+    total
 }
 
+#[derive(Debug,PartialEq)]
+enum Parser {
+    Stream,
+    Garbage,
+    Skip
+}
 
 
 #[cfg(test)]
