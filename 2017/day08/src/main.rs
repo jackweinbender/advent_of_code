@@ -7,20 +7,33 @@ type RegisterValue = isize;
 type InstructionSet = Vec<Instruction>;
 
 fn main() {
-    let instruction_set: InstructionSet = include_str!("input.txt")
+    let instructions: InstructionSet = include_str!("input.txt")
         .lines()
         .map(|line| line.parse::<Instruction>().unwrap())
         .collect();
 
-    println!("Answer #1: {}", max_final_register(instruction_set));
+    println!("Answer #1: {}", max_final_register(&instructions));
+    println!("Answer #2: {}", max_register(&instructions));
 }
 
-fn max_final_register(instructions: InstructionSet) -> isize {
+fn max_final_register(instructions: &InstructionSet) -> isize {
     let mut computer = Computer::new();
     for instruction in instructions {
         computer.apply_instruction(instruction);
     }
     computer.cpu.into_iter().map(|(_,v)| v ).max().unwrap()
+}
+fn max_register(instructions: &InstructionSet) -> isize {
+    let mut computer = Computer::new();
+    let mut max_value = 0;
+    for instruction in instructions {
+        computer.apply_instruction(instruction);
+
+        let max = computer.cpu.clone().into_iter().map(|(_,v)| v ).max().unwrap();
+
+        if max > max_value { max_value = max; }
+    }
+    max_value
 }
 
 #[derive(Debug)]
@@ -32,15 +45,15 @@ impl Computer {
     fn new() -> Computer {
         Computer { cpu: CPU::new() }
     }
-    fn apply_instruction(&mut self, mut instruction: Instruction) -> () {
+    fn apply_instruction(&mut self, instruction: &Instruction) -> () {
         if instruction.evaluate_condition(self) {
             let offset = instruction.offset();
-            *self.cpu.entry(instruction.register).or_insert(0) += offset;
+            *self.cpu.entry(instruction.register.clone()).or_insert(0) += offset;
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 struct Instruction {
     register: RegisterKey,
     delta: RegisterValue,
@@ -74,7 +87,7 @@ impl Instruction {
             Operation::Decrement => self.delta * -1,
         }
     }
-    fn evaluate_condition(&mut self, computer: &mut Computer) -> bool {
+    fn evaluate_condition(&self, computer: &mut Computer) -> bool {
         let register_value = computer.cpu.entry(self.guard.register.clone()).or_insert(0);
         match self.guard.condition {
             Condition::GreaterThan => *register_value > self.guard.value,
@@ -87,14 +100,14 @@ impl Instruction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 struct ConditionStatment {
     condition: Condition,
     register: RegisterKey,
     value: RegisterValue,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 enum Operation {
     Increment,
     Decrement,
@@ -112,7 +125,7 @@ impl FromStr for Operation {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 enum Condition {
     GreaterThan,
     LessThan,
@@ -147,6 +160,15 @@ mod test {
         .map(|line| line.parse::<Instruction>().unwrap())
         .collect();
 
-        assert_eq!(1, max_final_register(instructions));
+        assert_eq!(1, max_final_register(&instructions));
+    }
+    #[test]
+    fn test_max_register() {
+        let instructions: InstructionSet = include_str!("test_input.txt")
+        .lines()
+        .map(|line| line.parse::<Instruction>().unwrap())
+        .collect();
+
+        assert_eq!(10, max_register(&instructions));
     }
 }
