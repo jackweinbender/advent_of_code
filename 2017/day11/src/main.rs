@@ -1,3 +1,7 @@
+#![feature(test)]
+
+extern crate test;
+
 use std::ops::Add;
 use std::str::FromStr;
 
@@ -11,12 +15,12 @@ fn main() {
     println!("Answer #2: {:?}", get_max_distance(input));
 }
 
-fn walk_path(input: &str, start_tile: Tile) -> Tile {
+fn walk_path(input: &str, start_tile: &Tile) -> Tile {
     let path = generate_path(input);
-    let mut current_tile = start_tile + Tile(0, 0, 0);
+    let mut current_tile = start_tile.clone();
 
     for dir in path {
-        current_tile = next_tile(current_tile, dir);
+        current_tile = next_tile(&current_tile, dir);
     }
 
     current_tile
@@ -30,8 +34,8 @@ fn generate_path(input: &str) -> Vec<Compass> {
 }
 
 fn get_distance(input: &str) -> Distance {
-    let end_tile = walk_path(input, Tile(0, 0, 0));
-    distance(Tile(0, 0, 0), end_tile)
+    let end_tile = walk_path(input, &Tile(0, 0, 0));
+    distance(&Tile(0, 0, 0), &end_tile)
 }
 
 fn get_max_distance(input: &str) -> Distance {
@@ -40,9 +44,9 @@ fn get_max_distance(input: &str) -> Distance {
     let mut max_distance: Distance = 0;
 
     for dir in path {
-        current_tile = next_tile(current_tile.clone(), dir);
+        current_tile = next_tile(&current_tile, dir);
 
-        let current_distance = distance(Tile(0, 0, 0), current_tile.clone());
+        let current_distance = distance(&Tile(0, 0, 0), &current_tile);
         if current_distance > max_distance {
             max_distance = current_distance
         }
@@ -51,7 +55,7 @@ fn get_max_distance(input: &str) -> Distance {
     max_distance
 }
 
-fn distance(start_tile: Tile, end_tile: Tile) -> Distance {
+fn distance(start_tile: &Tile, end_tile: &Tile) -> Distance {
     let coordinates = vec![
         (start_tile.0 - end_tile.0).abs(),
         (start_tile.1 - end_tile.1).abs(),
@@ -98,43 +102,51 @@ impl Add for Tile {
     }
 }
 
-fn next_tile(tile: Tile, compass: Compass) -> Tile {
+fn next_tile(tile: &Tile, compass: Compass) -> Tile {
+    let t = tile.clone();
     match compass {
-        Compass::North => tile + Tile(0, 1, -1), // x-axis
-        Compass::South => tile + Tile(0, -1, 1),
-        Compass::SouthWest => tile + Tile(-1, 0, 1), // y-axis
-        Compass::NorthEast => tile + Tile(1, 0, -1), 
-        Compass::NorthWest => tile + Tile(-1, 1, 0),// z-axis
-        Compass::SouthEast => tile + Tile(1, -1, 0),
+        Compass::North => t + Tile(0, 1, -1), // x-axis
+        Compass::South => t + Tile(0, -1, 1),
+        Compass::SouthWest => t + Tile(-1, 0, 1), // y-axis
+        Compass::NorthEast => t + Tile(1, 0, -1), 
+        Compass::NorthWest => t + Tile(-1, 1, 0),// z-axis
+        Compass::SouthEast => t + Tile(1, -1, 0),
     }
 }
 
+
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
+    use test::Bencher;
 
     #[test]
     fn test_walk_distance_1() {
         let input = "ne,ne,ne";
-        let end_tile = walk_path(input, Tile(0, 0, 0));
-        assert_eq!(3, distance(Tile(0, 0, 0), end_tile));
+        let end_tile = walk_path(input, &Tile(0, 0, 0));
+        assert_eq!(3, distance(&Tile(0, 0, 0), &end_tile));
     }
     #[test]
     fn test_walk_distance_2() {
         let input = "ne,ne,sw,sw";
-        let end_tile = walk_path(input, Tile(0, 0, 0));
-        assert_eq!(0, distance(Tile(0, 0, 0), end_tile));
+        let end_tile = walk_path(input, &Tile(0, 0, 0));
+        assert_eq!(0, distance(&Tile(0, 0, 0), &end_tile));
     }
     #[test]
     fn test_walk_distance_3() {
         let input = "ne,ne,s,s";
-        let end_tile = walk_path(input, Tile(0, 0, 0));
-        assert_eq!(2, distance(Tile(0, 0, 0), end_tile));
+        let end_tile = walk_path(input, &Tile(0, 0, 0));
+        assert_eq!(2, distance(&Tile(0, 0, 0), &end_tile));
     }
     #[test]
     fn test_walk_distance_4() {
         let input = "se,sw,se,sw,sw";
-        let end_tile = walk_path(input, Tile(0, 0, 0));
-        assert_eq!(3, distance(Tile(0, 0, 0), end_tile));
+        let end_tile = walk_path(input, &Tile(0, 0, 0));
+        assert_eq!(3, distance(&Tile(0, 0, 0), &end_tile));
+    }
+    #[bench]
+    fn bench_walk(b: &mut Bencher) {
+        let input = include_str!("input.txt");
+        b.iter(|| walk_path(input, &Tile(0, 0, 0)));
     }
 }
