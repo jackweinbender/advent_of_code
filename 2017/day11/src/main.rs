@@ -8,13 +8,11 @@ fn main() {
     let input = include_str!("input.txt");
 
     println!("Answer #1: {:?}", get_distance(input));
+    println!("Answer #2: {:?}", get_max_distance(input));
 }
 
 fn walk_path(input: &str, start_tile: Tile) -> Tile {
-    let path: Vec<Compass> = input
-        .split(",")
-        .map(|x| x.parse::<Compass>().unwrap())
-        .collect();
+    let path = generate_path(input);
     let mut current_tile = start_tile + Tile(0, 0, 0);
 
     for dir in path {
@@ -24,9 +22,33 @@ fn walk_path(input: &str, start_tile: Tile) -> Tile {
     current_tile
 }
 
+fn generate_path(input: &str) -> Vec<Compass> {
+    input
+        .split(",")
+        .map(|x| x.parse::<Compass>().unwrap())
+        .collect()
+}
+
 fn get_distance(input: &str) -> Distance {
     let end_tile = walk_path(input, Tile(0, 0, 0));
     distance(Tile(0, 0, 0), end_tile)
+}
+
+fn get_max_distance(input: &str) -> Distance {
+    let path = generate_path(input);
+    let mut current_tile = Tile(0, 0, 0);
+    let mut max_distance: Distance = 0;
+
+    for dir in path {
+        current_tile = next_tile(current_tile.clone(), dir);
+
+        let current_distance = distance(Tile(0, 0, 0), current_tile.clone());
+        if current_distance > max_distance {
+            max_distance = current_distance
+        }
+    }
+
+    max_distance
 }
 
 fn distance(start_tile: Tile, end_tile: Tile) -> Distance {
@@ -38,12 +60,6 @@ fn distance(start_tile: Tile, end_tile: Tile) -> Distance {
 
     *coordinates.iter().max().unwrap() as Distance
 }
-
-// Hexagonal grid
-// Using 3-axis approach
-// run listof directions through Enum function
-// apply coordinate math to each input
-// Take the max abs() of the final coordinate (assuming 0,0,0 starting point)
 
 #[derive(Debug)]
 enum Compass {
@@ -73,12 +89,7 @@ impl FromStr for Compass {
 
 #[derive(Debug, Clone)]
 struct Tile(Point, Point, Point);
-impl Tile {
-    fn max(&self) -> Distance {
-        println!("{:?}", self);
-        5
-    }
-}
+
 impl Add for Tile {
     type Output = Tile;
 
@@ -104,7 +115,7 @@ mod test {
 
     #[test]
     fn test_walk_distance_1() {
-        let mut input = "ne,ne,ne";
+        let input = "ne,ne,ne";
         let end_tile = walk_path(input, Tile(0, 0, 0));
         assert_eq!(3, distance(Tile(0, 0, 0), end_tile));
     }
