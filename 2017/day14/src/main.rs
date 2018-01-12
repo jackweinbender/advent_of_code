@@ -4,12 +4,9 @@ use std::str::FromStr;
 use std::string::ParseError;
 
 fn main() {
-    let input = "uugsqrei";
-
-    println!(
-        "Answer #1: {}",
-        input.parse::<DiskDefragmenter>().unwrap().sum_used()
-    );
+    let disk = "uugsqrei".parse::<DiskDefragmenter>().unwrap();
+    println!("Answer #1: {}", disk.sum_used());
+    // println!("Answer #2: {}", disk.sum_groups());
 }
 
 type Knot = Vec<Increment>;
@@ -19,20 +16,36 @@ type Skip = usize;
 type Index = usize;
 type DenseHash = String;
 type Binary = String;
+type Disk = [[usize; 128]; 128];
 
-struct DiskDefragmenter(Vec<KnotHash>);
+struct DiskDefragmenter(Disk);
 
 impl DiskDefragmenter {
-    fn new(input: &str, size: usize) -> DiskDefragmenter {
-        let mut hashes = vec![];
-        for i in 0..size {
-            let row_input = format!("{}-{}", input, i);
-            hashes.push(row_input.parse::<KnotHash>().unwrap())
+    fn new(input: &str) -> DiskDefragmenter {
+        let mut disk: Disk = [[0; 128]; 128];
+        for row in 0..128 {
+            let row_binary = format!("{}-{}", input, row)
+                .parse::<KnotHash>()
+                .unwrap().to_bits();
+            let mut binary = row_binary.split("")
+                .clone()
+                .map(|x| x.parse::<usize>() )
+                .filter_map(Result::ok);
+            for col in 0..128 {
+                match binary.next() {
+                    Some(bit) => { 
+                        disk[row][col] = bit },
+                   _ => { panic!("Parse Error") }
+                }
+            }
         }
-        DiskDefragmenter(hashes)
+        DiskDefragmenter(disk)
     }
     fn sum_used(&self) -> usize {
-        self.0.iter().map(|x| x.sum_bits()).sum()
+        self.0.iter().fold(0, |acc, &x| acc + x.iter().sum::<usize>() )
+    }
+    fn sum_groups(&self) -> usize {
+        unimplemented!()
     }
 }
 
@@ -40,11 +53,11 @@ impl FromStr for DiskDefragmenter {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(DiskDefragmenter::new(s, 128))
+        Ok(DiskDefragmenter::new(s))
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 struct KnotHash(DenseHash);
 
 impl KnotHash {
@@ -186,5 +199,10 @@ mod test {
     fn test_sum_disk() {
         let disk = "flqrgnkx".parse::<DiskDefragmenter>().unwrap();
         assert_eq!(8108, disk.sum_used());
+    }
+    #[test]
+    fn test_sum_groups() {
+        let disk = "flqrgnkx".parse::<DiskDefragmenter>().unwrap();
+        assert_eq!(1242, disk.sum_groups());
     }
 }
