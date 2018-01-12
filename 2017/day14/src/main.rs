@@ -1,12 +1,14 @@
 #![feature(slice_rotate)]
+#![feature(vec_remove_item)]
 
 use std::str::FromStr;
 use std::string::ParseError;
+use std::collections::HashSet;
 
 fn main() {
     let disk = "uugsqrei".parse::<DiskDefragmenter>().unwrap();
     println!("Answer #1: {}", disk.sum_used());
-    // println!("Answer #2: {}", disk.sum_groups());
+    println!("Answer #2: {}", disk.sum_groups());
 }
 
 type Knot = Vec<Increment>;
@@ -17,6 +19,7 @@ type Index = usize;
 type DenseHash = String;
 type Binary = String;
 type Disk = [[usize; 128]; 128];
+type Region = (usize, usize);
 
 struct DiskDefragmenter(Disk);
 
@@ -26,26 +29,88 @@ impl DiskDefragmenter {
         for row in 0..128 {
             let row_binary = format!("{}-{}", input, row)
                 .parse::<KnotHash>()
-                .unwrap().to_bits();
-            let mut binary = row_binary.split("")
+                .unwrap()
+                .to_bits();
+            let mut binary = row_binary
+                .split("")
                 .clone()
-                .map(|x| x.parse::<usize>() )
+                .map(|x| x.parse::<usize>())
                 .filter_map(Result::ok);
             for col in 0..128 {
                 match binary.next() {
-                    Some(bit) => { 
-                        disk[row][col] = bit },
-                   _ => { panic!("Parse Error") }
+                    Some(bit) => disk[row][col] = bit,
+                    _ => panic!("Parse Error"),
                 }
             }
         }
         DiskDefragmenter(disk)
     }
     fn sum_used(&self) -> usize {
-        self.0.iter().fold(0, |acc, &x| acc + x.iter().sum::<usize>() )
+        self.0.iter().fold(
+            0,
+            |acc, &x| acc + x.iter().sum::<usize>(),
+        )
+    }
+    fn unvisited_neighbors(&self, region: Region, visited: &Vec<Region>) -> Vec<Region> {
+
+        let mut neighbors = vec![];
+
+        if region.0 < 127 {
+            neighbors.push((region.0 + 1, region.1));
+        }
+        if region.0 > 0 {
+            neighbors.push((region.0 - 1, region.1));
+        }
+        if region.1 < 127 {
+            neighbors.push((region.0, region.1 + 1));
+        }
+        if region.1 > 0 {
+            neighbors.push((region.0, region.1 - 1));
+        }
+
+        let neighbors = neighbors
+            .iter()
+            .filter(|&&(row, col)| self.0[row][col] == 1)
+            .filter(|&&(row, col)| !visited.contains(&(row, col)))
+            .map(|&x| x)
+            .collect();
+        neighbors
     }
     fn sum_groups(&self) -> usize {
-        unimplemented!()
+        let mut group_total = 0;
+        let mut regions = self.used_regions();
+
+        while let Some((row, col)) = regions.pop() {
+            let mut visited: Vec<Region> = vec![];
+            let mut to_visit: Vec<Region> = vec![(row, col)];
+            while let Some(region) = to_visit.pop() {
+                let mut neighbors = self.unvisited_neighbors(region, &visited);
+
+                to_visit.append(&mut neighbors);
+                visited.push((region.0, region.1));
+            }
+            for region in visited {
+                regions.remove_item(&region);
+            }
+            group_total += 1;
+        }
+
+        group_total
+    }
+    fn used_regions(&self) -> Vec<Region> {
+        let mut regions = vec![];
+        for (row_index, row) in self.0.iter().enumerate() {
+            for (col_index, col) in row.iter().enumerate() {
+                match *col {
+                    1 => regions.push((row_index, col_index)),
+                    0 => {} // Do nothing
+                    _ => {
+                        panic!("AAAAGH!");
+                    }
+                }
+            }
+        }
+        regions
     }
 }
 
@@ -57,7 +122,7 @@ impl FromStr for DiskDefragmenter {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 struct KnotHash(DenseHash);
 
 impl KnotHash {
