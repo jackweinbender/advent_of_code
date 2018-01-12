@@ -6,7 +6,10 @@ use std::string::ParseError;
 fn main() {
     let input = "uugsqrei";
 
-    println!("Answer #1: {}", input.parse::<DiskDefragmenter>().unwrap().sum_used());
+    println!(
+        "Answer #1: {}",
+        input.parse::<DiskDefragmenter>().unwrap().sum_used()
+    );
 }
 
 type Knot = Vec<Increment>;
@@ -17,19 +20,19 @@ type Index = usize;
 type DenseHash = String;
 type Binary = String;
 
-struct DiskDefragmenter (Vec<KnotHash>);
+struct DiskDefragmenter(Vec<KnotHash>);
 
 impl DiskDefragmenter {
     fn new(input: &str, size: usize) -> DiskDefragmenter {
         let mut hashes = vec![];
         for i in 0..size {
             let row_input = format!("{}-{}", input, i);
-            hashes.push( row_input.parse::<KnotHash>().unwrap() )
+            hashes.push(row_input.parse::<KnotHash>().unwrap())
         }
         DiskDefragmenter(hashes)
     }
     fn sum_used(&self) -> usize {
-        self.0.iter().map(|x| x.sum_bits() ).sum()
+        self.0.iter().map(|x| x.sum_bits()).sum()
     }
 }
 
@@ -145,9 +148,9 @@ fn hash_to_bin(hash: DenseHash) -> Binary {
     let mut bin_vec: Vec<String> = vec![];
 
     while let Some(ch) = chs.next() {
-        bin_vec.push( hex_to_bin( char::to_string(&ch) ) )
+        bin_vec.push(hex_to_bin(char::to_string(&ch)))
     }
-    
+
     bin_vec.join("")
 }
 
@@ -174,7 +177,10 @@ mod test {
     }
     #[test]
     fn test_hash_to_bin() {
-        assert_eq!(hash_to_bin(String::from("a0c2017")), "1010000011000010000000010111");
+        assert_eq!(
+            hash_to_bin(String::from("a0c2017")),
+            "1010000011000010000000010111"
+        );
     }
     #[test]
     fn test_sum_disk() {
