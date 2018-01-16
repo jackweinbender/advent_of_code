@@ -8,18 +8,21 @@ use std::collections::HashMap;
 type Index = usize;
 
 fn main() {
-    let instructions: Vec<Instr> = include_str!("input.txt").lines().map(|x| x.parse::<Instr>().unwrap()).collect();
+    let instructions: Vec<Instr> = include_str!("input.txt")
+        .lines()
+        .map(|x| x.parse::<Instr>().unwrap())
+        .collect();
     let mut registry = Registry::new();
 
     let mut index = 0;
     let mut counter = 0;
     println!("Debugger::\n---------------\n");
-    while let Some(i) = dispatch(index, &instructions, &mut registry){
+    while let Some(i) = dispatch(index, &instructions, &mut registry) {
         index = i;
 
         /* Optimisations */
         if index == 4 {
-            let base:isize = 2;
+            let base: isize = 2;
             registry.map.insert('a', 2147483648);
             registry.map.insert('i', 0);
             index = 7;
@@ -47,14 +50,16 @@ fn main() {
 
         // counter += 1;
         // if counter % (6) == 0 { break; }
-    };
+    }
 }
 
 fn dispatch(index: usize, instructions: &Vec<Instr>, registry: &mut Registry) -> Option<Index> {
-    
-    if index >= instructions.len(){ return None }
-    
-    let mut new_index:isize = index as isize;
+
+    if index >= instructions.len() {
+        return None;
+    }
+
+    let mut new_index: isize = index as isize;
     println!("------------------------");
     println!("Index: {}:", new_index);
 
@@ -62,122 +67,126 @@ fn dispatch(index: usize, instructions: &Vec<Instr>, registry: &mut Registry) ->
     println!("{:?}", registry);
     println!("{:?}", instruction);
     match instruction {
-        &Instr::Sound( ref r ) => { 
+        &Instr::Sound(ref r) => {
             registry.sound(r);
             new_index += 1;
-        },
+        }
         &Instr::Set(ref set_a, ref set_b) => {
             let b = {
                 match *set_b {
-                    Value::Register( reg ) => { *registry.map.entry(reg).or_insert(0) }
-                    Value::Frequency( f ) => { f }
+                    Value::Register(reg) => *registry.map.entry(reg).or_insert(0),
+                    Value::Frequency(f) => f,
                 }
             };
             let mut a = {
                 match *set_a {
-                    Value::Register(x) => { registry.map.entry(x).or_insert(0) }
-                    Value::Frequency(x) => { panic!("Bad add"); }
+                    Value::Register(x) => registry.map.entry(x).or_insert(0),
+                    Value::Frequency(x) => {
+                        panic!("Bad add");
+                    }
                 }
             };
             *a = b;
-        },
+        }
         &Instr::Add(ref add_a, ref add_b) => {
             let b = {
                 match *add_b {
-                    Value::Frequency(x) => { x },
-                    Value::Register(x) => {
-                        *registry.map.entry(x).or_insert(0)
-                    }
+                    Value::Frequency(x) => x,
+                    Value::Register(x) => *registry.map.entry(x).or_insert(0),
                 }
             };
             let mut a = {
                 match *add_a {
-                    Value::Register(x) => { registry.map.entry(x).or_insert(0) }
-                    Value::Frequency(x) => { panic!("Bad add"); }
+                    Value::Register(x) => registry.map.entry(x).or_insert(0),
+                    Value::Frequency(x) => {
+                        panic!("Bad add");
+                    }
                 }
             };
             *a += b;
-        },
+        }
         &Instr::Multiply(ref mult_a, ref mult_b) => {
             let b = {
                 match *mult_b {
-                    Value::Frequency(x) => { x },
-                    Value::Register(x) => {
-                        *registry.map.entry(x).or_insert(0)
-                    }
+                    Value::Frequency(x) => x,
+                    Value::Register(x) => *registry.map.entry(x).or_insert(0),
                 }
             };
             let mut a = {
                 match *mult_a {
-                    Value::Register(x) => { registry.map.entry(x).or_insert(0) }
-                    Value::Frequency(x) => { panic!("Bad add"); }
+                    Value::Register(x) => registry.map.entry(x).or_insert(0),
+                    Value::Frequency(x) => {
+                        panic!("Bad add");
+                    }
                 }
             };
             *a *= b;
-        },
+        }
         &Instr::Mod(ref mod_a, ref mod_b) => {
             let b = {
                 match *mod_b {
-                    Value::Frequency(x) => { x },
-                    Value::Register(x) => {
-                        *registry.map.entry(x).or_insert(0)
-                    }
+                    Value::Frequency(x) => x,
+                    Value::Register(x) => *registry.map.entry(x).or_insert(0),
                 }
             };
             let mut a = {
                 match *mod_a {
-                    Value::Register(x) => { registry.map.entry(x).or_insert(0) }
-                    Value::Frequency(x) => { panic!("Bad add"); }
+                    Value::Register(x) => registry.map.entry(x).or_insert(0),
+                    Value::Frequency(x) => {
+                        panic!("Bad add");
+                    }
                 }
             };
             println!("Mod {:?} of {} = {}", b, a, *a % b);
             *a %= b;
-        },
+        }
         &Instr::Recover(ref value) => {
             match *value {
-                    Value::Register(x) => { 
-                        let v = registry.map.entry(x).or_insert(0);
-                        if *v != 0 {
-                            println!("Answer #1: {:?}", registry.last_played);
-                            return None;
-                        }
-                    }
-                    Value::Frequency(x) => {
-                        if x != 0 {
-                            println!("Answer #1: {:?}", registry.last_played);
-                            return None;
-                        }
+                Value::Register(x) => {
+                    let v = registry.map.entry(x).or_insert(0);
+                    if *v != 0 {
+                        println!("Answer #1: {:?}", registry.last_played);
+                        return None;
                     }
                 }
-        },
+                Value::Frequency(x) => {
+                    if x != 0 {
+                        println!("Answer #1: {:?}", registry.last_played);
+                        return None;
+                    }
+                }
+            }
+        }
         &Instr::Jump(ref jump_a, ref jump_b) => {
             let a = {
                 match *jump_a {
-                    Value::Register( r ) => { *registry.map.entry(r).or_insert(0) },
-                    Value::Frequency( f ) => { f }
+                    Value::Register(r) => *registry.map.entry(r).or_insert(0),
+                    Value::Frequency(f) => f,
                 }
             };
             if a > 0 {
                 match *jump_b {
-                    Value::Register( r ) => { 
+                    Value::Register(r) => {
                         let i = new_index + *registry.map.entry(r).or_insert(0);
                         println!("Jumping to index {:?}", i as usize);
                         println!("{:?}", registry);
-                        return Some(i as usize)
-                    },
-                    Value::Frequency( f ) => {
+                        return Some(i as usize);
+                    }
+                    Value::Frequency(f) => {
                         let i = new_index + f;
                         println!("{:?}", registry);
                         println!("Jumping to index {:?}", i as usize);
-                        return Some(i as usize)
+                        return Some(i as usize);
                     }
                 }
             }
-        },
-        err => panic!("\nPanic from Enum: {:?}", err)
+        }
+        err => panic!("\nPanic from Enum: {:?}", err),
     }
 
-    if new_index < 0 { return None }
+    if new_index < 0 {
+        return None;
+    }
     new_index += 1;
     println!("{:?}", registry);
     println!("Next: {:?}", new_index);
@@ -187,23 +196,23 @@ fn dispatch(index: usize, instructions: &Vec<Instr>, registry: &mut Registry) ->
 #[derive(Debug)]
 struct Registry {
     map: HashMap<char, isize>,
-    last_played: isize
+    last_played: isize,
 }
 
 impl Registry {
-    fn new() -> Registry{
+    fn new() -> Registry {
         Registry {
             map: HashMap::new(),
-            last_played: 0
+            last_played: 0,
         }
     }
     fn sound(&mut self, value: &Value) -> () {
         match value {
-            &Value::Register( r ) => {
+            &Value::Register(r) => {
                 let f = self.map.entry(r).or_insert(0);
                 self.last_played = *f;
-            },
-            &Value::Frequency( f ) => {
+            }
+            &Value::Frequency(f) => {
                 self.last_played = f;
             }
         }
@@ -261,7 +270,7 @@ impl FromStr for Instr {
                     i.next().unwrap().parse::<Value>().unwrap(),
                 ))
             }
-            _ => Err(InstrParseErr{})
+            _ => Err(InstrParseErr {}),
         }
     }
 }
@@ -282,17 +291,17 @@ impl FromStr for Value {
             match s.parse::<char>() {
                 Ok(value) => {
                     if value.is_digit(10) {
-                        Ok(Value::Frequency( value.to_digit(10).unwrap() as isize))
+                        Ok(Value::Frequency(value.to_digit(10).unwrap() as isize))
                     } else {
                         Ok(Value::Register(value))
                     }
                 }
-                Err(_) => Err(InstrParseErr{}),
+                Err(_) => Err(InstrParseErr {}),
             }
         } else {
             match s.parse::<isize>() {
                 Ok(value) => Ok(Value::Frequency(value)),
-                Err(_) => Err(InstrParseErr{}),
+                Err(_) => Err(InstrParseErr {}),
             }
         }
     }
@@ -305,13 +314,16 @@ mod tests {
     use super::*;
     #[test]
     fn test_instructions() {
-        let instructions: Vec<Instr> = include_str!("test_input.txt").lines().map(|x| x.parse::<Instr>().unwrap()).collect();
+        let instructions: Vec<Instr> = include_str!("test_input.txt")
+            .lines()
+            .map(|x| x.parse::<Instr>().unwrap())
+            .collect();
         let mut registry = Registry::new();
 
         let mut index = 0;
-        while let Some(i) = dispatch(index, &instructions, &mut registry){
+        while let Some(i) = dispatch(index, &instructions, &mut registry) {
             index = i;
-        };
+        }
 
         assert_eq!(registry.last_played, 4);
     }
