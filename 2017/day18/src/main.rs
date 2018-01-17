@@ -1,7 +1,5 @@
 
 use std::str::FromStr;
-use std::error::Error;
-use std::fmt;
 use std::collections::HashMap;
 
 
@@ -12,221 +10,187 @@ fn main() {
         .lines()
         .map(|x| x.parse::<Instr>().unwrap())
         .collect();
-    let mut registry = Registry::new();
+    let part_1 = Registry::new(instructions.clone()).first_recieve();
+    println!("Answer #1: {}", part_1);
 
-    let mut index = 0;
-    let mut counter = 0;
-    println!("Debugger::\n---------------\n");
-    while let Some(i) = dispatch(index, &instructions, &mut registry) {
-        index = i;
-
-        /* Optimisations */
-        if index == 4 {
-            let base: isize = 2;
-            registry.map.insert('a', 2147483648);
-            registry.map.insert('i', 0);
-            index = 7;
-        }
-        if index == 10 {
-            let mut p = 826;
-            let a = *registry.map.entry('a').or_insert(0);
-
-            for _ in 0..127 {
-                p *= 8505;
-                p %= a;
-                p *= 129749;
-                p += 12345;
-                p %= a;
-            }
-            {
-                let b = registry.map.entry('b').or_insert(0);
-                *b = p % 10000;
-                registry.last_played = *b;
-            }
-            registry.map.insert('p', p);
-            registry.map.insert('i', 0);
-            index = 20;
-        }
-
-        // counter += 1;
-        // if counter % (6) == 0 { break; }
-    }
-}
-
-fn dispatch(index: usize, instructions: &Vec<Instr>, registry: &mut Registry) -> Option<Index> {
-
-    if index >= instructions.len() {
-        return None;
-    }
-
-    let mut new_index: isize = index as isize;
-    println!("------------------------");
-    println!("Index: {}:", new_index);
-
-    let instruction = &instructions[index];
-    println!("{:?}", registry);
-    println!("{:?}", instruction);
-    match instruction {
-        &Instr::Sound(ref r) => {
-            registry.sound(r);
-            new_index += 1;
-        }
-        &Instr::Set(ref set_a, ref set_b) => {
-            let b = {
-                match *set_b {
-                    Value::Register(reg) => *registry.map.entry(reg).or_insert(0),
-                    Value::Frequency(f) => f,
-                }
-            };
-            let mut a = {
-                match *set_a {
-                    Value::Register(x) => registry.map.entry(x).or_insert(0),
-                    Value::Frequency(x) => {
-                        panic!("Bad add");
-                    }
-                }
-            };
-            *a = b;
-        }
-        &Instr::Add(ref add_a, ref add_b) => {
-            let b = {
-                match *add_b {
-                    Value::Frequency(x) => x,
-                    Value::Register(x) => *registry.map.entry(x).or_insert(0),
-                }
-            };
-            let mut a = {
-                match *add_a {
-                    Value::Register(x) => registry.map.entry(x).or_insert(0),
-                    Value::Frequency(x) => {
-                        panic!("Bad add");
-                    }
-                }
-            };
-            *a += b;
-        }
-        &Instr::Multiply(ref mult_a, ref mult_b) => {
-            let b = {
-                match *mult_b {
-                    Value::Frequency(x) => x,
-                    Value::Register(x) => *registry.map.entry(x).or_insert(0),
-                }
-            };
-            let mut a = {
-                match *mult_a {
-                    Value::Register(x) => registry.map.entry(x).or_insert(0),
-                    Value::Frequency(x) => {
-                        panic!("Bad add");
-                    }
-                }
-            };
-            *a *= b;
-        }
-        &Instr::Mod(ref mod_a, ref mod_b) => {
-            let b = {
-                match *mod_b {
-                    Value::Frequency(x) => x,
-                    Value::Register(x) => *registry.map.entry(x).or_insert(0),
-                }
-            };
-            let mut a = {
-                match *mod_a {
-                    Value::Register(x) => registry.map.entry(x).or_insert(0),
-                    Value::Frequency(x) => {
-                        panic!("Bad add");
-                    }
-                }
-            };
-            println!("Mod {:?} of {} = {}", b, a, *a % b);
-            *a %= b;
-        }
-        &Instr::Recover(ref value) => {
-            match *value {
-                Value::Register(x) => {
-                    let v = registry.map.entry(x).or_insert(0);
-                    if *v != 0 {
-                        println!("Answer #1: {:?}", registry.last_played);
-                        return None;
-                    }
-                }
-                Value::Frequency(x) => {
-                    if x != 0 {
-                        println!("Answer #1: {:?}", registry.last_played);
-                        return None;
-                    }
-                }
-            }
-        }
-        &Instr::Jump(ref jump_a, ref jump_b) => {
-            let a = {
-                match *jump_a {
-                    Value::Register(r) => *registry.map.entry(r).or_insert(0),
-                    Value::Frequency(f) => f,
-                }
-            };
-            if a > 0 {
-                match *jump_b {
-                    Value::Register(r) => {
-                        let i = new_index + *registry.map.entry(r).or_insert(0);
-                        println!("Jumping to index {:?}", i as usize);
-                        println!("{:?}", registry);
-                        return Some(i as usize);
-                    }
-                    Value::Frequency(f) => {
-                        let i = new_index + f;
-                        println!("{:?}", registry);
-                        println!("Jumping to index {:?}", i as usize);
-                        return Some(i as usize);
-                    }
-                }
-            }
-        }
-        err => panic!("\nPanic from Enum: {:?}", err),
-    }
-
-    if new_index < 0 {
-        return None;
-    }
-    new_index += 1;
-    println!("{:?}", registry);
-    println!("Next: {:?}", new_index);
-    Some(new_index as usize)
+    let part_2a = Registry::new(instructions.clone());
+    let part_2b = Registry::new(instructions.clone());
 }
 
 #[derive(Debug)]
-struct Registry {
+struct Registry<'a> {
     map: HashMap<char, isize>,
+    index: usize,
     last_played: isize,
+    instr: Vec<Instr>,
+    recipient: Option<&'a mut Registry<'a>>,
+    inbox: Vec<isize>,
 }
 
-impl Registry {
-    fn new() -> Registry {
+impl<'a> Registry<'a> {
+    fn new(instructions: Vec<Instr>) -> Registry<'a> {
         Registry {
             map: HashMap::new(),
+            instr: instructions,
+            index: 0,
             last_played: 0,
+            recipient: None,
+            inbox: vec![],
         }
     }
-    fn sound(&mut self, value: &Value) -> () {
+    fn next(&mut self) -> Option<usize> {
+        let mut new_index = self.index as isize + 1;
+        match self.instr[self.index].clone() {
+            Instr::Send(v) => {
+                self.send(v);
+            }
+            Instr::Set(val, to_val) => {
+                self.set(val, to_val);
+            }
+            Instr::Add(val, to_val) => {
+                self.add(val, to_val);
+            }
+            Instr::Multiply(val, by_val) => {
+                self.multiply(val, by_val);
+            }
+            Instr::Mod(val, by_val) => {
+                self.modulo(val, by_val);
+            }
+            Instr::Receive(val) => {
+                match self.inbox.pop() {
+                    Some(incoming) => {
+                        self.receive(val, incoming);
+                    }
+                    None => new_index = self.index as isize,
+                }
+            }
+            Instr::Jump(gtz, offset) => {
+                match self.jump(gtz, offset) {
+                    Some(ofs) => new_index += ofs,
+                    _ => {}
+                }
+            }
+        }
+
+        match new_index {
+            i if i >= self.instr.len() as isize => None,
+            i if i < 0 => None,
+            i => Some(i as usize),
+        }
+    }
+    fn send(&mut self, value: Value) {
         match value {
-            &Value::Register(r) => {
+            Value::Register(r) => {
                 let f = self.map.entry(r).or_insert(0);
                 self.last_played = *f;
             }
-            &Value::Frequency(f) => {
+            Value::Frequency(f) => {
                 self.last_played = f;
             }
         }
+
+        match self.recipient {
+            Some(ref mut reg) => reg.inbox.push(self.last_played),
+            None => {}
+        }
+    }
+    fn receive(&mut self, register: Value, incoming: isize) {
+        if let Value::Register(r) = register {
+            let reg = self.map.entry(r).or_insert(0);
+            *reg = incoming;
+        }
+    }
+    fn set(&mut self, val: Value, to_val: Value) {
+        let to_value = self.get_value(to_val);
+
+        if let Value::Register(x) = val {
+            let set_value = self.map.entry(x).or_insert(0);
+            *set_value = to_value;
+        }
+    }
+    fn add(&mut self, val: Value, to_val: Value) {
+        let to_value = self.get_value(to_val);
+
+        if let Value::Register(x) = val {
+            let set_value = self.map.entry(x).or_insert(0);
+            *set_value += to_value;
+        }
+    }
+    fn multiply(&mut self, val: Value, by_val: Value) {
+        let by_value = self.get_value(by_val);
+
+        if let Value::Register(x) = val {
+            let set_value = self.map.entry(x).or_insert(0);
+            *set_value *= by_value;
+        }
+    }
+    fn modulo(&mut self, val: Value, by_val: Value) {
+        let by_value = self.get_value(by_val);
+
+        if let Value::Register(x) = val {
+            let set_value = self.map.entry(x).or_insert(0);
+            *set_value %= by_value;
+        }
+    }
+    fn jump(&mut self, gtz: Value, ofs: Value) -> Option<isize> {
+        let gt_zero = self.get_value(gtz);
+
+        match ofs {
+            Value::Frequency(i) if gt_zero > 0 => return Some(i),
+            _ => return None,
+        }
+    }
+    fn get_value(&mut self, value: Value) -> isize {
+        match value {
+            Value::Frequency(x) => x,
+            Value::Register(x) => *self.map.entry(x).or_insert(0),
+        }
+    }
+    fn first_recieve(&mut self) -> usize {
+        unimplemented!();
+        // let mut index = 0;
+        // println!("Debugger::\n---------------\n");
+        // while let Some(i) = self.next() {
+        //     index = i;
+
+        //     /* Optimisations */
+        //     if index == 4 {
+        //         self.map.insert('a', 2147483648);
+        //         self.map.insert('i', 0);
+        //         index = 7;
+        //     }
+        //     if index == 10 {
+        //         let mut p = 826;
+        //         let a = *self.map.entry('a').or_insert(0);
+
+        //         for _ in 0..127 {
+        //             p *= 8505;
+        //             p %= a;
+        //             p *= 129749;
+        //             p += 12345;
+        //             p %= a;
+        //         }
+        //         {
+        //             let b = self.map.entry('b').or_insert(0);
+        //             *b = p % 10000;
+        //             self.last_played = *b;
+        //         }
+        //         self.map.insert('p', p);
+        //         self.map.insert('i', 0);
+        //         index = 20;
+        //     }
+        // }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Instr {
-    Sound(Value),
+    Send(Value),
     Set(Value, Value),
     Add(Value, Value),
     Multiply(Value, Value),
     Mod(Value, Value),
-    Recover(Value),
+    Receive(Value),
     Jump(Value, Value),
 }
 
@@ -238,7 +202,7 @@ impl FromStr for Instr {
         let mut i = split.into_iter();
 
         match i.next() {
-            Some("snd") => Ok(Instr::Sound(i.next().unwrap().parse::<Value>().unwrap())),
+            Some("snd") => Ok(Instr::Send(i.next().unwrap().parse::<Value>().unwrap())),
             Some("set") => {
                 Ok(Instr::Set(
                     i.next().unwrap().parse::<Value>().unwrap(),
@@ -263,7 +227,7 @@ impl FromStr for Instr {
                     i.next().unwrap().parse::<Value>().unwrap(),
                 ))
             }
-            Some("rcv") => Ok(Instr::Recover(i.next().unwrap().parse::<Value>().unwrap())),
+            Some("rcv") => Ok(Instr::Receive(i.next().unwrap().parse::<Value>().unwrap())),
             Some("jgz") => {
                 Ok(Instr::Jump(
                     i.next().unwrap().parse::<Value>().unwrap(),
@@ -275,7 +239,7 @@ impl FromStr for Instr {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Value {
     Register(char),
     Frequency(isize),
