@@ -10,11 +10,11 @@ fn main() {
         .lines()
         .map(|x| x.parse::<Instr>().unwrap())
         .collect();
-    let part_1 = Registry::new(instructions.clone()).first_recieve();
+    let part_1 = Registry::new(&instructions).first_recieve();
     println!("Answer #1: {}", part_1);
 
-    let part_2a = Registry::new(instructions.clone());
-    let part_2b = Registry::new(instructions.clone());
+    // let part_2a = Registry::new(&instructions);
+    // let part_2b = Registry::new(&instructions);
 }
 
 #[derive(Debug)]
@@ -22,13 +22,13 @@ struct Registry<'a> {
     map: HashMap<char, isize>,
     index: usize,
     last_played: isize,
-    instr: Vec<Instr>,
+    instr: &'a Vec<Instr>,
     recipient: Option<&'a mut Registry<'a>>,
     inbox: Vec<isize>,
 }
 
 impl<'a> Registry<'a> {
-    fn new(instructions: Vec<Instr>) -> Registry<'a> {
+    fn new(instructions: &'a Vec<Instr>) -> Registry<'a> {
         Registry {
             map: HashMap::new(),
             instr: instructions,
@@ -38,7 +38,7 @@ impl<'a> Registry<'a> {
             inbox: vec![],
         }
     }
-    fn next(&mut self) -> Option<usize> {
+    fn next(&mut self) -> Option<Index> {
         let mut new_index = self.index as isize + 1;
         match self.instr[self.index].clone() {
             Instr::Send(v) => {
@@ -75,7 +75,7 @@ impl<'a> Registry<'a> {
         match new_index {
             i if i >= self.instr.len() as isize => None,
             i if i < 0 => None,
-            i => Some(i as usize),
+            i => Some(i as Index),
         }
     }
     fn send(&mut self, value: Value) {
@@ -146,40 +146,45 @@ impl<'a> Registry<'a> {
             Value::Register(x) => *self.map.entry(x).or_insert(0),
         }
     }
-    fn first_recieve(&mut self) -> usize {
-        unimplemented!();
-        // let mut index = 0;
-        // println!("Debugger::\n---------------\n");
-        // while let Some(i) = self.next() {
-        //     index = i;
+    fn first_recieve(&mut self) -> isize {
+        println!("Debugger::\n---------------\n");
+        // println!("{:?}", self);
+        while let Some(i) = self.next() {
+            match self.instr[i] {
+                Instr::Receive(_) => { break; }
+                _ => { self.index = i; }
+            }
+            
+            /* Optimisations */
+            if self.index == 4 {
+                self.map.insert('a', 2147483648);
+                self.map.insert('i', 0);
+                self.index = 7;
+            }
+            if self.index == 10 {
+                let mut p = 826;
+                let a = *self.map.entry('a').or_insert(0);
 
-        //     /* Optimisations */
-        //     if index == 4 {
-        //         self.map.insert('a', 2147483648);
-        //         self.map.insert('i', 0);
-        //         index = 7;
-        //     }
-        //     if index == 10 {
-        //         let mut p = 826;
-        //         let a = *self.map.entry('a').or_insert(0);
+                for _ in 0..127 {
+                    p *= 8505;
+                    p %= a;
+                    p *= 129749;
+                    p += 12345;
+                    p %= a;
+                }
+                {
+                    let b = self.map.entry('b').or_insert(0);
+                    *b = p % 10000;
+                    self.last_played = *b;
+                }
+                self.map.insert('p', p);
+                self.map.insert('i', 0);
+                self.index = 20;
+            }
 
-        //         for _ in 0..127 {
-        //             p *= 8505;
-        //             p %= a;
-        //             p *= 129749;
-        //             p += 12345;
-        //             p %= a;
-        //         }
-        //         {
-        //             let b = self.map.entry('b').or_insert(0);
-        //             *b = p % 10000;
-        //             self.last_played = *b;
-        //         }
-        //         self.map.insert('p', p);
-        //         self.map.insert('i', 0);
-        //         index = 20;
-        //     }
-        // }
+
+        }
+        self.last_played
     }
 }
 
@@ -278,17 +283,12 @@ mod tests {
     use super::*;
     #[test]
     fn test_instructions() {
-        let instructions: Vec<Instr> = include_str!("test_input.txt")
-            .lines()
-            .map(|x| x.parse::<Instr>().unwrap())
-            .collect();
-        let mut registry = Registry::new();
+        let instructions: Vec<Instr> = include_str!("input.txt")
+        .lines()
+        .map(|x| x.parse::<Instr>().unwrap())
+        .collect();
+        let first = Registry::new(&instructions).first_recieve();
 
-        let mut index = 0;
-        while let Some(i) = dispatch(index, &instructions, &mut registry) {
-            index = i;
-        }
-
-        assert_eq!(registry.last_played, 4);
+        assert_eq!(first, 7071);
     }
 }
