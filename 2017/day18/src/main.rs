@@ -257,7 +257,8 @@ impl<'a> Registry<'a> {
         }
     }
     fn first_recieve(&mut self) -> isize {
-        println!("Debugger::\n---------------\n");
+        println!("\n");
+        // println!("Debugger::\n---------------\n");
         // println!("{:?}", self);
         while let Some(i) = self.next() {
             match self.instr[i] {
