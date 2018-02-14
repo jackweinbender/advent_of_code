@@ -10,9 +10,9 @@ fn main() {
         .lines()
         .map(|x| x.parse::<Instr>().unwrap())
         .collect();
-    let part_1 = Registry::new(&instructions).first_recieve();
-    println!("Answer #1: {}", part_1);
-
+    // let part_1 = Registry::new(&instructions).first_recieve();
+    // println!("Answer #1: {}", part_1);
+    
     // Part 2
     let mut part_2a = Registry::new(&instructions);
     let mut part_2b = Registry::new(&instructions);
@@ -23,104 +23,11 @@ fn main() {
     loop {
         part_2a.inbox.append(&mut part_2b.outbox);
         part_2b.outbox = VecDeque::new();
-        
         while let Some(i) = part_2a.next() {
-            // println!("PartA Index: {}", i);
             part_2a.index = i;
-
-            /* Optimisations */
-            if part_2a.index == 4 {
-                part_2a.map.insert('a', 2147483648);
-                part_2a.map.insert('i', 0);
-                part_2a.index = 7;
-            }
-            if part_2a.index == 10 {
-                let mut p = 826;
-                let a = *part_2a.map.entry('a').or_insert(0);
-
-                for _ in 0..127 {
-                    p *= 8505;
-                    p %= a;
-                    p *= 129749;
-                    p += 12345;
-                    p %= a;
-                }
-                {
-                    let b = part_2a.map.entry('b').or_insert(0);
-                    *b = p % 10000;
-                    part_2a.last_played = *b;
-                    part_2a.send_count += 128;
-                    for _ in 0..127 {
-                        part_2a.outbox.push_back(part_2a.last_played);
-                    }
-                }
-                part_2a.map.insert('p', p);
-                part_2a.map.insert('i', 0);
-                part_2a.index = 20;
-            }
-            if part_2a.index == 27 {
-                
-                let a = part_2a.map.get(&'a').unwrap().clone();
-                let b = part_2a.map.get(&'b').unwrap().clone();
-
-                if a <= b {
-                    part_2a.outbox.push_back(a);
-                    part_2a.send_count += 1;
-                    part_2a.map.insert('a', b);
-                    part_2a.index = 36;
-                }
-            }
         }
-        
-
-        part_2b.inbox.append(&mut part_2a.outbox);
-        part_2a.outbox = VecDeque::new();
-        
         if let Some(j) = part_2b.next() {
-            // println!("PartB Index: {}", j);
             part_2b.index = j;
-            /* Optimisations */
-            if part_2b.index == 4 {
-                part_2b.map.insert('a', 2147483648);
-                part_2b.map.insert('i', 0);
-                part_2b.index = 7;
-            }
-            if part_2b.index == 10 {
-                let mut p = 826;
-                let a = *part_2b.map.entry('a').or_insert(0);
-
-                for _ in 0..127 {
-                    p *= 8505;
-                    p %= a;
-                    p *= 129749;
-                    p += 12345;
-                    p %= a;
-                }
-                {
-                    let b = part_2b.map.entry('b').or_insert(0);
-                    *b = p % 10000;
-                    part_2b.last_played = *b;
-                    part_2b.send_count += 128;
-                    for _ in 0..127 {
-                        part_2b.outbox.push_back(part_2b.last_played);
-                    }
-                }
-                part_2b.map.insert('p', p);
-                part_2b.map.insert('i', 0);
-                part_2b.index = 20;
-            }
-            if part_2b.index == 27 {
-                
-                let a = part_2b.map.get(&'a').unwrap().clone();
-                let b = part_2b.map.get(&'b').unwrap().clone();
-
-                if a <= b {
-                    part_2b.outbox.push_back(a);
-                    part_2b.send_count += 1;
-                    part_2b.map.insert('a', b);
-                    part_2b.index = 36;
-                }
-            }
         } else {
             println!("Answer #2: {:?}", part_2a.send_count);
             break;
@@ -203,6 +110,7 @@ impl<'a> Registry<'a> {
             }
         }
         self.outbox.push_back(self.last_played);
+        self.send_count += 1;
     }
     fn receive(&mut self, register: Value, incoming: isize) {
         if let Value::Register(r) = register {
