@@ -28,10 +28,8 @@ fn cycle_calibrate(input: &str) -> Frequency {
 
     while let Some(n) = it.next() {
         freq = freq + n;
-        if visited.contains(&freq) { break; }
-        else { visited.insert(freq); }
+        if !visited.insert(freq) { break; }
     }
-
     return freq
 }
 
