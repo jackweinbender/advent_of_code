@@ -6,7 +6,8 @@ fn main(){
     let input = include_str!("input.txt");
     let box_ids = parse_input(input);
 
-    println!("Answer #1: {}", BoxID::checksum(box_ids));
+    println!("Answer #1: {}", BoxID::checksum(&box_ids));
+    // println!("Answer #2: {}", BoxID::find_box(&box_ids));
 }
 
 fn parse_input(input: &'static str) -> Vec<BoxID>{
@@ -15,7 +16,7 @@ fn parse_input(input: &'static str) -> Vec<BoxID>{
 
 struct BoxID { id: &'static str }
 impl BoxID {
-    fn checksum(ids: Vec<BoxID>) -> usize {
+    fn checksum(ids: &Vec<BoxID>) -> usize {
         let (twos, threes) = ids.iter().map(|b| BoxID::check(b) ).fold((0,0), 
             |(mut a,mut b), (x,y)| {
                 if x >= 1 { a += 1 }
