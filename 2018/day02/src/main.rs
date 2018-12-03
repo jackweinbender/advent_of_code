@@ -21,7 +21,7 @@ impl BoxID {
             for i in ids {
                 let mut diffs = 0;
                 let mut common = String::new();
-                let chars = i.char_indexgit add();
+                let mut chars = i.id.char_indices();
                 while let Some((idx, ch)) = chars.next() {
                     if ch != id.id[idx] { diffs += 1; }
                     if (diffs > 1) { break; }
