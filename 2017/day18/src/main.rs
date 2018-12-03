@@ -1,38 +1,38 @@
-
 use std::str::FromStr;
 use std::collections::HashMap;
 use std::collections::VecDeque;
+use std::sync::mpsc;
+use std::sync::mpsc::Sender;
+use std::sync::mpsc::Receiver;
+
+use std::thread;
+use std::time::Duration;
 
 type Index = usize;
 
+
 fn main() {
-    let instructions: Vec<Instr> = include_str!("input.txt")
-        .lines()
-        .map(|x| x.parse::<Instr>().unwrap())
-        .collect();
-    // let part_1 = Registry::new(&instructions).first_recieve();
-    // println!("Answer #1: {}", part_1);
-    
-    // Part 2
-    let mut part_2a = Registry::new(&instructions);
-    let mut part_2b = Registry::new(&instructions);
 
-    part_2a.map.insert('p', 0);
-    part_2b.map.insert('p', 1);
+    // let input = include_str!("input.txt");
+    // let instructions: Vec<Instr> = parse_input(input);
 
-    loop {
-        part_2a.inbox.append(&mut part_2b.outbox);
-        part_2b.outbox = VecDeque::new();
-        while let Some(i) = part_2a.next() {
-            part_2a.index = i;
-        }
-        if let Some(j) = part_2b.next() {
-            part_2b.index = j;
-        } else {
-            println!("Answer #2: {:?}", part_2a.send_count);
-            break;
-        }
-    }
+    // println!("Answer #1: {}", find_first_freq(&instructions));
+
+    // let (send_to_a, recv_a): (Sender<Registry>, Receiver<Registry>) = mpsc::channel();
+    // let (send_to_b, recv_b): (Sender<Registry>, Receiver<Registry>) = mpsc::channel();
+
+    // let mut reg_a = Registry::new(&instructions, send_to_b, recv_a);
+    // let mut reg_b = Registry::new(&instructions, send_to_a, recv_b);
+
+    // reg_a.map.insert('p', 0);
+    // reg_b.map.insert('p', 1);
+
+}
+
+fn find_first_freq(input: &Vec<Instr>) -> isize { unimplemented!() }
+
+fn parse_input(input: &str) -> Vec<Instr> {   
+    input.lines().map(|x| x.parse::<Instr>().unwrap()).collect()
 }
 
 #[derive(Debug)]
@@ -42,120 +42,61 @@ struct Registry<'a> {
     last_played: isize,
     send_count: isize,
     instr: &'a Vec<Instr>,
-    outbox: VecDeque<isize>,
-    inbox: VecDeque<isize>,
+    send: mpsc::Sender<Registry<'a>>,
+    recv: mpsc::Receiver<Registry<'a>>,
 }
 
 impl<'a> Registry<'a> {
-    fn new(instructions: &'a Vec<Instr>) -> Registry<'a> {
+    fn new(instructions: &'a Vec<Instr>, send: Sender<Registry<'a>>, recv: Receiver<Registry<'a>>) -> Registry<'a> {
         Registry {
             map: HashMap::new(),
             instr: instructions,
             index: 0,
             send_count: 0,
             last_played: 0,
-            outbox: VecDeque::new(),
-            inbox: VecDeque::new(),
+            send: send,
+            recv: recv,
         }
     }
     fn next(&mut self) -> Option<Index> {
-        let mut new_index = self.index as isize + 1;
-        match self.instr[self.index].clone() {
+        match self.instr[self.index] {
             Instr::Send(v) => {
                 self.send(v);
+                self.shift(1);
             }
             Instr::Set(val, to_val) => {
                 self.set(val, to_val);
+                self.shift(1);
             }
             Instr::Add(val, to_val) => {
                 self.add(val, to_val);
+                self.shift(1);
             }
             Instr::Multiply(val, by_val) => {
                 self.multiply(val, by_val);
+                self.shift(1);
             }
             Instr::Mod(val, by_val) => {
                 self.modulo(val, by_val);
+                self.shift(1);
             }
             Instr::Receive(val) => {
-                match self.inbox.pop_front() {
-                    Some(incoming) => {
-                        self.receive(val, incoming);
-                    }
-                    None => new_index = self.index as isize,
-                }
+                self.receive(val);
+                self.shift(1);
             }
             Instr::Jump(gtz, offset) => {
                 match self.jump(gtz, offset) {
-                    Some(ofs) => new_index += ofs,
-                    _ => {}
+                    Some(ofs)   => { self.shift(ofs); },
+                    None        => { self.shift(1); }
                 }
             }
         }
 
-        match new_index {
-            i if i == self.index as isize => None,
-            i if i >= self.instr.len() as isize => None,
-            i if i < 0 => None,
-            i => Some(i as Index),
-        }
-    }
-    fn send(&mut self, value: Value) {
-        match value {
-            Value::Register(r) => {
-                let f = self.map.entry(r).or_insert(0);
-                self.last_played = *f;
-            }
-            Value::Frequency(f) => {
-                self.last_played = f;
-            }
-        }
-        self.outbox.push_back(self.last_played);
-        self.send_count += 1;
-    }
-    fn receive(&mut self, register: Value, incoming: isize) {
-        if let Value::Register(r) = register {
-            let reg = self.map.entry(r).or_insert(0);
-            *reg = incoming;
-        }
-    }
-    fn set(&mut self, val: Value, to_val: Value) {
-        let to_value = self.get_value(to_val);
 
-        if let Value::Register(x) = val {
-            let set_value = self.map.entry(x).or_insert(0);
-            *set_value = to_value;
-        }
-    }
-    fn add(&mut self, val: Value, to_val: Value) {
-        let to_value = self.get_value(to_val);
-
-        if let Value::Register(x) = val {
-            let set_value = self.map.entry(x).or_insert(0);
-            *set_value += to_value;
-        }
-    }
-    fn multiply(&mut self, val: Value, by_val: Value) {
-        let by_value = self.get_value(by_val);
-
-        if let Value::Register(x) = val {
-            let set_value = self.map.entry(x).or_insert(0);
-            *set_value *= by_value;
-        }
-    }
-    fn modulo(&mut self, val: Value, by_val: Value) {
-        let by_value = self.get_value(by_val);
-
-        if let Value::Register(x) = val {
-            let set_value = self.map.entry(x).or_insert(0);
-            *set_value %= by_value;
-        }
-    }
-    fn jump(&mut self, gtz: Value, ofs: Value) -> Option<isize> {
-        let gt_zero = self.get_value(gtz);
-
-        match ofs {
-            Value::Frequency(i) if gt_zero > 0 => return Some(i),
-            _ => return None,
+        match self.index {
+            index if index >= self.instr.len() => None,
+            index if index < 0 => None,
+            index => Some(index),
         }
     }
     fn get_value(&mut self, value: Value) -> isize {
@@ -164,47 +105,37 @@ impl<'a> Registry<'a> {
             Value::Register(x) => *self.map.entry(x).or_insert(0),
         }
     }
-    fn first_recieve(&mut self) -> isize {
-        println!("\n");
-        // println!("Debugger::\n---------------\n");
-        // println!("{:?}", self);
-        while let Some(i) = self.next() {
-            match self.instr[i] {
-                Instr::Receive(_) => { break; }
-                _ => { self.index = i; }
-            }
-            
-            /* Optimisations */
-            if self.index == 4 {
-                self.map.insert('a', 2147483648);
-                self.map.insert('i', 0);
-                self.index = 7;
-            }
-            if self.index == 10 {
-                let mut p = 826;
-                let a = *self.map.entry('a').or_insert(0);
+    fn send() -> () {}
+    // snd X plays a sound with a frequency equal to the value of X.
+    fn set(&mut self, val: Value, to_val: Value) {
+        // set X Y sets register X to the value of Y.
+        let to_value = self.get_value(to_val);
 
-                for _ in 0..127 {
-                    p *= 8505;
-                    p %= a;
-                    p *= 129749;
-                    p += 12345;
-                    p %= a;
-                }
-                {
-                    let b = self.map.entry('b').or_insert(0);
-                    *b = p % 10000;
-                    self.last_played = *b;
-                }
-                self.map.insert('p', p);
-                self.map.insert('i', 0);
-                self.index = 20;
-            }
-
-
+        if let Value::Register(x) = val {
+            let set_value = self.map.entry(x).or_insert(0);
+            *set_value = to_value;
         }
-        self.last_played
     }
+    
+    fn add(&mut self, val: Value, to_val: Value) {
+        // add X Y increases register X by the value of Y.
+        let to_value = self.get_value(to_val);
+
+        if let Value::Register(x) = val {
+            let set_value = self.map.entry(x).or_insert(0);
+            *set_value += to_value;
+        }
+    }
+    
+    fn multiply() -> () {}
+    // mul X Y sets register X to the result of multiplying the value contained in register X by the value of Y.
+    fn modulo() -> () {}
+    // mod X Y sets register X to the remainder of dividing the value contained in register X by the value of Y (that is, it sets X to the result of X modulo Y).
+    fn receive() -> () {}
+    // rcv X recovers the frequency of the last sound played, but only when the value of X is not zero. (If it is zero, the command does nothing.)
+    fn jump() -> () {}
+    // jgz X Y jumps with an offset of the value of Y, but only if the value of X is greater than zero. (An offset of 2 skips the next instruction, an offset of -1 jumps to the previous instruction, and so on.)
+
 }
 
 #[derive(Debug, Clone)]
@@ -296,21 +227,14 @@ impl FromStr for Value {
 }
 
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
     fn test_instructions() {
-        let instructions: Vec<Instr> = include_str!("input.txt")
-        .lines()
-        .map(|x| x.parse::<Instr>().unwrap())
-        .collect();
-        let first = Registry::new(&instructions).first_recieve();
+        let input = include_str!("test_input.txt");
+        let instructions: Vec<Instr> = parse_input(input);
 
-        assert_eq!(first, 7071);
-    }
-    #[test]
-    fn test_count_send() {
+        assert_eq!(find_first_freq(&instructions), 4);
     }
 }
