@@ -7,7 +7,7 @@ fn main(){
     let box_ids = parse_input(input);
 
     println!("Answer #1: {}", BoxID::checksum(&box_ids));
-    println!("Answer #2: {}", BoxID::find_box(&box_ids));
+    println!("Answer #2: {}", BoxID::find_box(&box_ids).unwrap());
 }
 
 fn parse_input(input: &'static str) -> Vec<BoxID>{
@@ -16,21 +16,33 @@ fn parse_input(input: &'static str) -> Vec<BoxID>{
 
 struct BoxID { id: &'static str }
 impl BoxID {
-    fn find_box(ids: &Vec<BoxID>) -> Result<Err, Ok<String>> {
+    fn find_box(ids: &Vec<BoxID>) -> Option<String> {
         for id in ids {
             for i in ids {
-                let mut diffs = 0;
-                let mut common = String::new();
-                let mut chars = i.id.char_indices();
-                while let Some((idx, ch)) = chars.next() {
-                    if ch != id.id[idx] { diffs += 1; }
-                    if (diffs > 1) { break; }
-                    common.push(ch);
+                if let Some(common) = BoxID::diff(id.id, i.id) {
+                    return Some(common)
                 }
-                if (diffs == 1){ return Ok(common) }
             }
         }
-        Err("No match found")
+        None
+    }
+    fn diff(a: &str, b: & str) -> Option<String> {
+        let mut diffs = 0;
+        let mut common = String::new();
+        let mut a_iter = a.chars();
+        let mut b_iter = b.chars();
+        while let Some(ch_a) = a_iter.next() {
+            if let Some(ch_b) = b_iter.next() {
+                if diffs > 1 { break; }
+                if ch_a == ch_b {
+                    common.push(ch_a);
+                } else  { 
+                    diffs += 1;
+                }
+            }
+        }
+        if diffs == 1 { Some(common) }
+        else { None }
     }
     fn checksum(ids: &Vec<BoxID>) -> usize {
         let (twos, threes) = ids.iter().map(|b| BoxID::check(b) ).fold((0,0), 
@@ -81,6 +93,6 @@ mod tests {
         let input = include_str!("test_input_2.txt");
         let box_ids = parse_input(input);
 
-        assert_eq!(BoxID::find_box(&box_ids).ok(), String.from("fgij"));
+        assert_eq!(BoxID::find_box(&box_ids).unwrap(), String::from("fgij"));
     }
 }
