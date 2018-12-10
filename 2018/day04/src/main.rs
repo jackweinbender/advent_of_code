@@ -8,12 +8,15 @@ fn main(){
     records.sort();
 
     let schedule = process_schedule(&records);
-    let (gid, minute) = sleepiest_minute(schedule);
+    let (gid, minute) = sleepiest_minute(&schedule);
 
     println!("Answer #1: {}", gid * minute);
+
+    let (gid_2, minute_2) = sleepiest_minute_two(&schedule);
+    println!("Answer #2: {}", gid_2 * minute_2);
 }
 
-fn sleepiest_minute(schedule: Schedule) -> (GuardID, Minute) {
+fn sleepiest_minute(schedule: &Schedule) -> (GuardID, Minute) {
     let sleepy_guard = schedule.iter()
         .map(|(g,m)| (*g, m.len() ))
         .max_by(|(_,xm), (_,ym)| xm.cmp(ym)).unwrap().0;
@@ -32,6 +35,28 @@ fn sleepiest_minute(schedule: Schedule) -> (GuardID, Minute) {
         .map(|(val, _)| val).expect("");
 
     (sleepy_guard, min)
+}
+
+fn sleepiest_minute_two(schedule: &Schedule) -> (GuardID, Minute) {
+    let mut mode_by_guard = HashMap::new();
+
+    for (guard, minutes) in schedule.iter() {
+        let mut minute_distribution = HashMap::new();
+        
+        for &minute in minutes.iter() {
+            *minute_distribution.entry(minute).or_insert(0) += 1;
+        }
+
+        let (minute, magnitude) = minute_distribution.into_iter()
+            .max_by_key(|&(_, count)| count).unwrap();
+        
+        mode_by_guard.insert(*guard, (minute, magnitude));
+    }
+
+    mode_by_guard.into_iter()
+        .map(|(a, (b, c))| (a, b, c))
+        .max_by_key(|&(_, _, mag)| mag )
+        .map(|(a, b, _)| (a, b)).unwrap()
 }
 
 fn parse_input(input: &str) -> Vec<Record>{
@@ -171,6 +196,16 @@ mod test {
 
         let schedule = process_schedule(&records);
 
-        assert_eq!(sleepiest_minute(schedule), (10, 24));
+        assert_eq!(sleepiest_minute(&schedule), (10, 24));
+    }
+    #[test]
+    fn test_sleepiest_minute_2() {
+        let input = include_str!("test_input.txt");
+        let mut records = parse_input(input);
+        records.sort();
+
+        let schedule = process_schedule(&records);
+
+        assert_eq!(sleepiest_minute_two(&schedule), (99, 45));
     }
 }
