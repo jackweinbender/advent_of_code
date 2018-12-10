@@ -3,20 +3,43 @@ use std::num::ParseIntError;
 use std::collections::HashMap;
 
 fn main(){
-    let input = include_str!("test_input.txt");
+    let input = include_str!("input.txt");
     let mut records = parse_input(input);
     records.sort();
 
-    println!("{:?}", sleepiest_guard(records));
+    let schedule = process_schedule(&records);
+    let (gid, minute) = sleepiest_minute(schedule);
+
+    println!("Answer #1: {}", gid * minute);
+}
+
+fn sleepiest_minute(schedule: Schedule) -> (GuardID, Minute) {
+    let sleepy_guard = schedule.iter()
+        .map(|(g,m)| (*g, m.len() ))
+        .max_by(|(_,xm), (_,ym)| xm.cmp(ym)).unwrap().0;
+
+    let sleeps = schedule.get(&sleepy_guard).unwrap();
+    
+    let mut occurrences = HashMap::new();
+
+    for &value in sleeps.iter() {
+        *occurrences.entry(value).or_insert(0) += 1;
+    }
+
+    let min = occurrences
+        .into_iter()
+        .max_by_key(|&(_, count)| count)
+        .map(|(val, _)| val).expect("");
+
+    (sleepy_guard, min)
 }
 
 fn parse_input(input: &str) -> Vec<Record>{
     input.lines().map(|l| l.parse::<Record>().ok().unwrap() ).collect()
 }
 
-fn sleepiest_guard(records: Vec<Record>) -> GuardID {
+fn process_schedule(records: &Vec<Record>) -> Schedule {
     let mut sleep_counter = HashMap::new();
-    
     let mut current_guard = Guard::Awake { id: 0 };
 
     let mut recs = records.iter();
@@ -33,21 +56,16 @@ fn sleepiest_guard(records: Vec<Record>) -> GuardID {
             },
             Action::WakesUp => {
                 if let Guard::Sleeping { id, since } = current_guard {
-                    let duration = (since..r.time.minute).len();
-                    {
-                        let mut counter = sleep_counter.entry(id).or_insert(0);
-                        *counter += duration;
+                    for m in since..r.time.minute {
+                        let mut counter = sleep_counter.entry(id).or_insert(vec![]);
+                        counter.push(m);
                     }
                     current_guard = Guard::Awake{ id }
                 }
             }
         }
     }
-
-    let max_sleeper = sleep_counter.values().max().unwrap();
-    let (grd, tm) = sleep_counter.iter().find(|(k,v)| *v == max_sleeper ).unwrap();
-
-    *grd
+    sleep_counter
 }
 
 fn get_bedtime(time: TimeStamp) -> TimeStamp {
@@ -64,6 +82,7 @@ fn get_bedtime(time: TimeStamp) -> TimeStamp {
     }
 }
 
+type Schedule = HashMap<GuardID, Vec<Minute>>;
 type Year = usize;
 type Month = usize;
 type Day = usize;
@@ -145,12 +164,13 @@ impl FromStr for TimeStamp {
 mod test {
     use super::*;
     #[test]
-    fn test_sleepiest_guard() {
+    fn test_sleepiest_minute() {
         let input = include_str!("test_input.txt");
         let mut records = parse_input(input);
         records.sort();
 
-        assert_eq!(sleepiest_guard(records), 10);
-        // assert_eq!(sleepiest_minute(records), 24);
+        let schedule = process_schedule(&records);
+
+        assert_eq!(sleepiest_minute(schedule), (10, 24));
     }
 }
