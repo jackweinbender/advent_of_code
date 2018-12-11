@@ -1,8 +1,8 @@
-use std::str::FromStr;
-use std::num::ParseIntError;
 use std::collections::HashMap;
+use std::num::ParseIntError;
+use std::str::FromStr;
 
-fn main(){
+fn main() {
     let input = include_str!("input.txt");
     let mut records = parse_input(input);
     records.sort();
@@ -17,12 +17,15 @@ fn main(){
 }
 
 fn sleepiest_minute(schedule: &Schedule) -> (GuardID, Minute) {
-    let sleepy_guard = schedule.iter()
-        .map(|(g,m)| (*g, m.len() ))
-        .max_by(|(_,xm), (_,ym)| xm.cmp(ym)).unwrap().0;
+    let sleepy_guard = schedule
+        .iter()
+        .map(|(g, m)| (*g, m.len()))
+        .max_by(|(_, xm), (_, ym)| xm.cmp(ym))
+        .unwrap()
+        .0;
 
     let sleeps = schedule.get(&sleepy_guard).unwrap();
-    
+
     let mut occurrences = HashMap::new();
 
     for &value in sleeps.iter() {
@@ -32,7 +35,8 @@ fn sleepiest_minute(schedule: &Schedule) -> (GuardID, Minute) {
     let min = occurrences
         .into_iter()
         .max_by_key(|&(_, count)| count)
-        .map(|(val, _)| val).expect("");
+        .map(|(val, _)| val)
+        .expect("");
 
     (sleepy_guard, min)
 }
@@ -42,25 +46,32 @@ fn sleepiest_minute_two(schedule: &Schedule) -> (GuardID, Minute) {
 
     for (guard, minutes) in schedule.iter() {
         let mut minute_distribution = HashMap::new();
-        
+
         for &minute in minutes.iter() {
             *minute_distribution.entry(minute).or_insert(0) += 1;
         }
 
-        let (minute, magnitude) = minute_distribution.into_iter()
-            .max_by_key(|&(_, count)| count).unwrap();
-        
+        let (minute, magnitude) = minute_distribution
+            .into_iter()
+            .max_by_key(|&(_, count)| count)
+            .unwrap();
+
         mode_by_guard.insert(*guard, (minute, magnitude));
     }
 
-    mode_by_guard.into_iter()
+    mode_by_guard
+        .into_iter()
         .map(|(a, (b, c))| (a, b, c))
-        .max_by_key(|&(_, _, mag)| mag )
-        .map(|(a, b, _)| (a, b)).unwrap()
+        .max_by_key(|&(_, _, mag)| mag)
+        .map(|(a, b, _)| (a, b))
+        .unwrap()
 }
 
-fn parse_input(input: &str) -> Vec<Record>{
-    input.lines().map(|l| l.parse::<Record>().ok().unwrap() ).collect()
+fn parse_input(input: &str) -> Vec<Record> {
+    input
+        .lines()
+        .map(|l| l.parse::<Record>().ok().unwrap())
+        .collect()
 }
 
 fn process_schedule(records: &Vec<Record>) -> Schedule {
@@ -72,20 +83,21 @@ fn process_schedule(records: &Vec<Record>) -> Schedule {
         match &r.action {
             Action::BeginsShift(g) => current_guard = g.clone(),
             Action::FallsAsleep => {
-                if let Guard::Awake{ id } = current_guard {
+                if let Guard::Awake { id } = current_guard {
                     let bedtime = get_bedtime(r.time.clone());
-                    current_guard = Guard::Sleeping { 
-                                        id: id,
-                                        since: bedtime.minute }
+                    current_guard = Guard::Sleeping {
+                        id: id,
+                        since: bedtime.minute,
+                    }
                 }
-            },
+            }
             Action::WakesUp => {
                 if let Guard::Sleeping { id, since } = current_guard {
                     for m in since..r.time.minute {
                         let mut counter = sleep_counter.entry(id).or_insert(vec![]);
                         counter.push(m);
                     }
-                    current_guard = Guard::Awake{ id }
+                    current_guard = Guard::Awake { id }
                 }
             }
         }
@@ -97,12 +109,12 @@ fn get_bedtime(time: TimeStamp) -> TimeStamp {
     if time.hour == 0 {
         time
     } else {
-        TimeStamp { 
+        TimeStamp {
             year: time.year,
             month: time.month,
             day: time.day,
             hour: 0,
-            minute: 0
+            minute: 0,
         }
     }
 }
@@ -116,16 +128,16 @@ type Minute = usize;
 
 type GuardID = usize;
 
-#[derive(Debug,Eq,Ord,PartialOrd,PartialEq,Clone)]
+#[derive(Debug, Eq, Ord, PartialOrd, PartialEq, Clone)]
 enum Guard {
-    Sleeping{ id: GuardID, since: Minute },
-    Awake{ id: GuardID }
+    Sleeping { id: GuardID, since: Minute },
+    Awake { id: GuardID },
 }
 
-#[derive(Debug,Eq,Ord,PartialOrd,PartialEq)]
+#[derive(Debug, Eq, Ord, PartialOrd, PartialEq)]
 struct Record {
     time: TimeStamp,
-    action: Action
+    action: Action,
 }
 
 impl FromStr for Record {
@@ -133,17 +145,17 @@ impl FromStr for Record {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let record = Record {
             time: s[..18].parse()?,
-            action: s[19..].parse()?
+            action: s[19..].parse()?,
         };
         Ok(record)
     }
 }
 
-#[derive(Debug,Eq,Ord,PartialOrd,PartialEq)]
+#[derive(Debug, Eq, Ord, PartialOrd, PartialEq)]
 enum Action {
-    BeginsShift( Guard ),
+    BeginsShift(Guard),
     FallsAsleep,
-    WakesUp
+    WakesUp,
 }
 
 impl FromStr for Action {
@@ -155,30 +167,32 @@ impl FromStr for Action {
             "falls asleep" => Ok(Action::FallsAsleep),
             _ => {
                 let g = parts.nth(1).expect("Can't parse action");
-                let guard = Guard::Awake{id: g[1..].parse::<GuardID>()? };
-                Ok(Action::BeginsShift( guard ))
+                let guard = Guard::Awake {
+                    id: g[1..].parse::<GuardID>()?,
+                };
+                Ok(Action::BeginsShift(guard))
             }
-        }
+        };
     }
 }
 
-#[derive(Debug,Eq,Ord,PartialOrd,PartialEq,Clone)]
+#[derive(Debug, Eq, Ord, PartialOrd, PartialEq, Clone)]
 struct TimeStamp {
     year: Year,
     month: Month,
     day: Day,
     hour: Hour,
-    minute: Minute
+    minute: Minute,
 }
 
 impl FromStr for TimeStamp {
     type Err = ParseIntError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let result = TimeStamp {
-            year:   s[1..5].parse::<usize>()?,
-            month:  s[6..8].parse::<usize>()?,
-            day:    s[9..11].parse::<usize>()?,
-            hour:   s[12..14].parse::<usize>()?,
+            year: s[1..5].parse::<usize>()?,
+            month: s[6..8].parse::<usize>()?,
+            day: s[9..11].parse::<usize>()?,
+            hour: s[12..14].parse::<usize>()?,
             minute: s[15..17].parse::<usize>()?,
         };
         Ok(result)
