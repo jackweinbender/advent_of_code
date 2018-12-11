@@ -9,7 +9,10 @@ fn main() {
 }
 
 fn parse_input(input: &str) -> Vec<Frequency> {
-    input.split_whitespace().filter_map(|l| l.parse::<Frequency>().ok() ).collect()
+    input
+        .split_whitespace()
+        .filter_map(|l| l.parse::<Frequency>().ok())
+        .collect()
 }
 
 fn sum_calibrate(input: &str) -> Frequency {
@@ -28,9 +31,11 @@ fn cycle_calibrate(input: &str) -> Frequency {
 
     while let Some(n) = it.next() {
         freq = freq + n;
-        if !visited.insert(freq) { break; }
+        if !visited.insert(freq) {
+            break;
+        }
     }
-    return freq
+    return freq;
 }
 
 #[cfg(test)]
