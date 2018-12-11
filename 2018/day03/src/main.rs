@@ -1,8 +1,8 @@
 extern crate regex;
 
 use regex::Regex;
-use std::collections::HashSet;
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 type ID = usize;
 
@@ -17,37 +17,54 @@ fn main() {
 }
 
 fn parse_input(input: &str) -> Vec<Claim> {
-
     let re = Regex::new(r"\#(\d+) @ (\d+),(\d+): (\d+)x(\d+)").unwrap();
 
-    input.lines().map(|l| {
-        let caps = re.captures(l).unwrap();
+    input
+        .lines()
+        .map(|l| {
+            let caps = re.captures(l).unwrap();
 
-        Claim {
-            id: caps.get(1).map_or(0, |m| m.as_str().parse::<ID>().ok().unwrap() ),
-            offset: Offset {
-                x: caps.get(2).map_or(0, |m| m.as_str().parse::<ID>().ok().unwrap() ),
-                y: caps.get(3).map_or(0, |m| m.as_str().parse::<ID>().ok().unwrap() )
-            },
-            size: Rect {
-                x: caps.get(4).map_or(0, |m| m.as_str().parse::<ID>().ok().unwrap() ),
-                y: caps.get(5).map_or(0, |m| m.as_str().parse::<ID>().ok().unwrap() )
-            } 
-        }
-
-    }).collect()
+            Claim {
+                id: caps
+                    .get(1)
+                    .map_or(0, |m| m.as_str().parse::<ID>().ok().unwrap()),
+                offset: Offset {
+                    x: caps
+                        .get(2)
+                        .map_or(0, |m| m.as_str().parse::<ID>().ok().unwrap()),
+                    y: caps
+                        .get(3)
+                        .map_or(0, |m| m.as_str().parse::<ID>().ok().unwrap()),
+                },
+                size: Rect {
+                    x: caps
+                        .get(4)
+                        .map_or(0, |m| m.as_str().parse::<ID>().ok().unwrap()),
+                    y: caps
+                        .get(5)
+                        .map_or(0, |m| m.as_str().parse::<ID>().ok().unwrap()),
+                },
+            }
+        })
+        .collect()
 }
 
-struct Offset { x: usize, y: usize }
+struct Offset {
+    x: usize,
+    y: usize,
+}
 
-struct Rect { x: usize, y: usize }
+struct Rect {
+    x: usize,
+    y: usize,
+}
 
-type Point = ( usize, usize );
+type Point = (usize, usize);
 
 struct Claim {
     id: ID,
     offset: Offset,
-    size: Rect
+    size: Rect,
 }
 
 impl Claim {
@@ -55,7 +72,7 @@ impl Claim {
         let mut cells = HashSet::new();
         for x in 0..self.size.x {
             for y in 0..self.size.y {
-                cells.insert( (self.offset.x + x, self.offset.y + y) );
+                cells.insert((self.offset.x + x, self.offset.y + y));
             }
         }
         cells
@@ -63,12 +80,12 @@ impl Claim {
 }
 
 struct Fabric {
-    claims: Vec<Claim>
+    claims: Vec<Claim>,
 }
 
 impl Fabric {
     fn new(claims: Vec<Claim>) -> Fabric {
-        Fabric{ claims: claims }
+        Fabric { claims: claims }
     }
 
     fn overlapping(&self) -> usize {
@@ -79,7 +96,7 @@ impl Fabric {
             let cells = claim.cells_from_claim();
 
             for cell in cells {
-                if !once.insert(cell){
+                if !once.insert(cell) {
                     twice.insert(cell);
                 }
             }
@@ -97,14 +114,20 @@ impl Fabric {
         for claim in &self.claims {
             let claim_cells = claim.cells_from_claim();
             if self.claims.iter().all(|c| {
-                if claim.id == c.id { return true; }
-                
+                if claim.id == c.id {
+                    return true;
+                }
+
                 if let Some(cells) = map.get(&c.id) {
                     let diff = cells.difference(&claim_cells).collect::<Vec<&Point>>();
-                    if diff.len() == cells.len() { return true; }
+                    if diff.len() == cells.len() {
+                        return true;
+                    }
                 }
                 false
-            }) { return Some(claim); }
+            }) {
+                return Some(claim);
+            }
         }
         None
     }
