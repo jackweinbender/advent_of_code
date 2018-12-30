@@ -6,10 +6,10 @@ fn main() {
     let input = include_str!("input.txt");
     let hot_spots = parse_input(input);
 
-    println!("Answer #1: {}", answer_1(hot_spots));
+    println!("Answer #1: {}", answer_1(hot_spots.clone()));
+    println!("Answer #2: {}", answer_2(&hot_spots, 10000));
 }
 fn answer_1(mut hot_spots: Vec<Point>) -> i32 {
-
     let mut map: HashMap<Point, Vec<Point>> = HashMap::new();
     let maxes = hot_spots.clone();
     let some_x_max = maxes.iter().max_by(|&x, &y| {
@@ -51,7 +51,7 @@ fn answer_1(mut hot_spots: Vec<Point>) -> i32 {
 
     let max = map
         .into_iter()
-        .filter(|(k,_v)| k.bounded_by(&hot_spots.clone()))
+        .filter(|(k, _v)| k.bounded_by(&hot_spots.clone()))
         .max_by(|x, y| {
             let x_len = x.1.len();
             let y_len = y.1.len();
@@ -59,6 +59,28 @@ fn answer_1(mut hot_spots: Vec<Point>) -> i32 {
         });
     max.unwrap().1.len() as i32
 }
+
+fn answer_2(hotspots: &Vec<Point>, radius: i32) -> i32 {
+    let mut safezone_size = 0;
+
+    for x in 0..radius {
+        for y in 0..radius {
+            let p = Point(x, y);
+            if let Some(_) = hotspots
+                .iter()
+                .try_fold(0, |acc, next| match acc + p.distance(next) {
+                    new if new >= radius => None,
+                    new => Some(new),
+                })
+            {
+                safezone_size += 1;
+            }
+        }
+    }
+
+    safezone_size
+}
+
 fn parse_input(input: &str) -> Vec<Point> {
     input
         .lines()
@@ -66,7 +88,7 @@ fn parse_input(input: &str) -> Vec<Point> {
         .collect()
 }
 
-#[derive(Clone,Hash,Eq,PartialEq,Debug)]
+#[derive(Clone, Hash, Eq, PartialEq, Debug)]
 struct Point(i32, i32);
 
 impl Point {
@@ -77,34 +99,37 @@ impl Point {
         x_offset.abs() + y_offset.abs()
     }
     fn bounded_by(&self, points: &Vec<Point>) -> bool {
-        let north = points.iter().any(|p| { 
-            if p == self { return false }
+        let north = points.iter().any(|p| {
+            if p == self {
+                return false;
+            }
             let run = (self.1 - p.1).abs();
             let rise = self.0 - p.0;
-            // println!("{:?} is bounded N by {:?}: {:?}", self, p, rise>=run );
             rise >= run
         });
         let south = points.iter().any(|p| {
-            if p == self { return false }
+            if p == self {
+                return false;
+            }
             let run = (self.1 - p.1).abs();
             let rise = p.0 - self.0;
-            // println!("{:?} is bounded S by {:?}: {:?}", self, p, rise>=run );
             rise >= run
         });
         let east = points.iter().any(|p| {
-            if p == self { return false }
+            if p == self {
+                return false;
+            }
             let run = (self.0 - p.0).abs();
             let rise = p.1 - self.1;
-            // println!("{:?} is bounded E by {:?}: {:?}", self, p, rise>=run );
             rise >= run
         });
         let west = points.iter().any(|p| {
-            if p == self { return false }
+            if p == self {
+                return false;
+            }
             let run = (self.0 - p.0).abs();
             let rise = self.1 - p.1;
-            // println!("{:?} is bounded W by {:?}: {:?}", self, p, rise>=run );
             rise >= run
-
         });
 
         north && south && east && west
@@ -131,11 +156,18 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_bounded() {
+    fn test_answer_1() {
         let input = include_str!("test_input.txt");
         let points = parse_input(input);
 
-        assert_eq!( answer_1(points), 17 );
+        assert_eq!(answer_1(points), 17);
+    }
+    #[test]
+    fn test_answer_2() {
+        let input = include_str!("test_input.txt");
+        let points = parse_input(input);
+
+        assert_eq!(answer_2(&points, 32), 16);
     }
 
 }
