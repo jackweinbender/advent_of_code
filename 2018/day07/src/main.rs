@@ -66,9 +66,9 @@ fn answer_2(reqs: Vec<Requirement>, offset: Second, workers: usize) -> Second {
         candidates.insert(r.req);
         candidates.insert(r.id);
     }
-    let mut duration: Second = -1;
+    let mut duration: Second = 0;
 
-    while duration <= 0 || scheduler.len() > 0 {
+    while duration == 0 || scheduler.len() > 0 {
         duration += 1;
         // Get tasks about to be completed
         let (comp, remainder): (Vec<Task>, Vec<Task>) =
@@ -77,7 +77,6 @@ fn answer_2(reqs: Vec<Requirement>, offset: Second, workers: usize) -> Second {
         for c in comp {
             complete.insert(c.id);
         }
-
         // Reassign unfinished tasks to scheduler
         scheduler = remainder.iter().filter_map(|t| t.dec()).collect();
         // Check for free threads
@@ -113,7 +112,7 @@ fn answer_2(reqs: Vec<Requirement>, offset: Second, workers: usize) -> Second {
             candidates.remove(&cand);
         }
     }
-    duration
+    duration - 1
 }
 
 fn step_duration(step: Step, offset: Second) -> Second {
