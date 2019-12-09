@@ -1,9 +1,10 @@
 import { Wire } from "./wire"
 import { Vector } from "./vector";
+import { Point } from "./point"
 
 export class Panel {
     static intersections(left: Wire, right: Wire){
-        let intersections = new Set();
+        let intersections: Set<Point> = new Set();
 
         left.path.forEach(l_vector => {
             right.path.forEach( r_vector => {
@@ -11,5 +12,6 @@ export class Panel {
                 if(intersection){ intersections.add(intersection) }
             });
         });
+        return intersections
     }
 }
