@@ -38,15 +38,16 @@ const goA = input => {
       }
     }
   }
-  console.log(ast_map);
-  return Object.values(ast_map).map((s: Set<string>) => s.size);
-  // .reduce((curr: number, next: number) => {
-  //   if (next > curr) {
-  //     return next;
-  //   } else {
-  //     return curr;
-  //   }
-  // }, 0);
+  // console.log(ast_map);
+  return Object.values(ast_map)
+    .map((s: Set<string>) => s.size)
+    .reduce((curr: number, next: number) => {
+      if (next > curr) {
+        return next;
+      } else {
+        return curr;
+      }
+    }, 0);
 };
 
 const goB = input => {
@@ -76,7 +77,7 @@ const t1 = `
 ...##
 `;
 const t1_input = prepareInput(t1);
-test(goA(t1_input), [8]);
+test(goA(t1_input), 8);
 
 const t2 = `
 ......#.#.
@@ -91,7 +92,7 @@ const t2 = `
 .#....####
 `;
 const t2_input = prepareInput(t2);
-test(goA(t2_input), [33]);
+test(goA(t2_input), 33);
 
 const t3 = `
 #.#...#.#.
@@ -106,7 +107,7 @@ const t3 = `
 .####.###.
 `;
 const t3_input = prepareInput(t3);
-// test(goA(t3_input), [35]);
+test(goA(t3_input), 35);
 
 const t4 = `
 .#..#..###
@@ -121,7 +122,7 @@ const t4 = `
 .....#.#..
 `;
 const t4_input = prepareInput(t4);
-// test(goA(t4_input), [41]);
+test(goA(t4_input), 41);
 
 const t5 = `
 .#..##.###...#######
@@ -146,14 +147,14 @@ const t5 = `
 ###.##.####.##.#..##
 `;
 const t5_input = prepareInput(t5);
-// test(goA(t5_input), [210]);
+test(goA(t5_input), 210);
 
 /* Results */
 
 console.time("Time");
-// const resultA = goA(input);
+const resultA = goA(input);
 const resultB = goB(input);
 console.timeEnd("Time");
 
-// console.log("Solution to part 1:", resultA);
+console.log("Solution to part 1:", resultA);
 // console.log("Solution to part 2:", resultB);
