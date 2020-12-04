@@ -5,25 +5,43 @@ const prepareInput = (rawInput: string): number[] => {
 };
 const input = prepareInput(readInput());
 
-const TARGET = 2020;
-
 const goA = (input: Array<number>) => {
+  const TARGET = 2020;
+  const [a, b] = pairThatSumsTo(input, TARGET);
+  return a * b;
+};
+
+const pairThatSumsTo = (input: number[], target: number): [number, number] => {
   const s = new Set();
 
   for (var entry in input) {
     const given = input[entry];
-    const inverse = TARGET - given;
+    const inverse = target - given;
 
     if (s.has(inverse)) {
-      return given * inverse;
+      return [given, inverse];
     } else {
       s.add(given);
     }
   }
+  return null;
 };
 
 const goB = (input) => {
-  return;
+  const TARGET = 2020;
+  // for each number, find a pair of numbers that equal it's inverse
+  // If we find a pair, we return the product of the pair * given
+  for (let entry in input) {
+    const given = input[entry];
+    const localTarget = TARGET - given;
+
+    const pair = pairThatSumsTo(input, localTarget);
+
+    if (pair) {
+      const [a, b] = pair;
+      return given * a * b;
+    }
+  }
 };
 
 /* Tests */
