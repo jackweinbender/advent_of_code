@@ -24,7 +24,7 @@ function policyFromString(input: string): Policy {
   return { char, min, max };
 }
 const sum = (acc, next) => acc + next;
-const sumValid = ([pol, pwd]) => (isValid(pwd, pol) ? 1 : 0);
+const sumValid = (fn) => ([pol, pwd]) => (fn(pwd, pol) ? 1 : 0);
 
 function isValid(pwd: Password, policy: Policy): boolean {
   const charCount = pwd
@@ -35,12 +35,25 @@ function isValid(pwd: Password, policy: Policy): boolean {
   return charCount <= policy.max && charCount >= policy.min;
 }
 
+function isNewValid(pwd: Password, policy: Policy): boolean {
+  const arr = pwd.split("");
+
+  const indexA = policy.min - 1;
+  const indexB = policy.max - 1;
+
+  const matchA = arr[indexA] === policy.char;
+  const matchB = arr[indexB] === policy.char;
+
+  // XOR of matchA and matchB for "exactly once"
+  return matchA ? !matchB : matchB;
+}
+
 const goA = (input) => {
-  return input.map(sumValid).reduce(sum, 0);
+  return input.map(sumValid(isValid)).reduce(sum, 0);
 };
 
 const goB = (input) => {
-  return;
+  return input.map(sumValid(isNewValid)).reduce(sum, 0);
 };
 
 /* Tests */
