@@ -7,29 +7,27 @@ def area(length, width)
   length * width
 end
 
-def surface_area(len, width, height)
-  [area(len, width), area(width, height), area(len, height)].map { |i| i * 2 }
-end
-
-def perimeter(line)
-  line.min(2).sum * 2
-end
-
 def volume(length, width, height)
   length * width * height
 end
 
-def total_wrapping_paper(box)
-  box.sum + (box.min / 2)
+def faces(len, width, height)
+  [area(len, width), area(width, height), area(len, height)]
+end
+
+def shortest_perimeter(line)
+  line.min(2).sum * 2
+end
+
+def total_wrapping_paper(line)
+  (faces(*line).sum * 2) + faces(*line).min
 end
 
 def total_ribbon(line)
-  perimeter(line) + volume(*line)
+  shortest_perimeter(line) + volume(*line)
 end
 
-paper = input.map { |line| surface_area(*line) }
-             .map { |box| total_wrapping_paper(box) }.sum
-
+paper  = input.map { |line| total_wrapping_paper(line) }.sum
 ribbon = input.map { |line| total_ribbon(line) }.sum
 
 puts "Necessary Paper: #{paper}"
