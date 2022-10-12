@@ -1,9 +1,5 @@
+require_relative '../ruby_helpers'
 require 'set'
-
-def assert(boolean)
-  message = boolean ? 'PASSED' : 'FAILED'
-  puts message
-end
 
 BADDIES = Set.new(%w[ab cd pq xy])
 VOWELS = Set.new(%w[a e i o u])
@@ -27,13 +23,13 @@ def nice_a?(string)
 end
 
 # Tests
-puts '--- PART A TESTS ---'
-assert nice_a?('ugknbfddgicrmopn') == true
-assert nice_a?('aaa') == true
-assert nice_a?('jchzalrnumimnmhp') == false
-assert nice_a?('haegwjzuvuyypxyu') == false
-assert nice_a?('dvszwmarrgswjxmb') == false
-puts '--------------------'
+tests "part a" do
+  assert nice_a?('ugknbfddgicrmopn') == true
+  assert nice_a?('aaa') == true
+  assert nice_a?('jchzalrnumimnmhp') == false
+  assert nice_a?('haegwjzuvuyypxyu') == false
+  assert nice_a?('dvszwmarrgswjxmb') == false
+end
 
 # It contains a pair of any two letters that appears at least twice in the string without overlapping, like xyxy (xy) or aabcdefgaa (aa), but not like aaa (aa, but it overlaps).
 # It contains at least one letter which repeats with exactly one letter between them, like xyx, abcdefeghi (efe), or even aaa.
@@ -64,18 +60,21 @@ def nice_b?(string)
 end
 
 # Tests
-puts '--- PART B TESTS ---'
-assert nice_b?('qjhvhtzxzqqjkmpb') == true
-assert nice_b?('xxyxx') == true
-assert nice_b?('uurcxstgmygtbstg') == false
-assert nice_b?('ieodomkazucvgmuy') == false
-assert nice_b?('aaa') == false
-puts '--------------------'
+tests "part b" do
+  assert nice_b?('qjhvhtzxzqqjkmpb') == true
+  assert nice_b?('xxyxx') == true
+  assert nice_b?('uurcxstgmygtbstg') == false
+  assert nice_b?('ieodomkazucvgmuy') == false
+  assert nice_b?('aaa') == false
+end
 
 input = File.readlines('input.txt', chomp: true)
 
 part1 = input.filter_map { |word| nice_a?(word) }.count
 part2 = input.filter_map { |word| nice_b?(word) }.count
+
+quiet_assert part1 == 258
+quiet_assert part2 == 53
 
 puts "Part 1: #{part1}"
 puts "Part 2: #{part2}"
