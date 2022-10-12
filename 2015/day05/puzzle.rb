@@ -23,7 +23,7 @@ def nice_a?(string)
 end
 
 # Tests
-tests "part a" do
+tests 'part a' do
   assert nice_a?('ugknbfddgicrmopn') == true
   assert nice_a?('aaa') == true
   assert nice_a?('jchzalrnumimnmhp') == false
@@ -50,7 +50,6 @@ def nice_b?(string)
 
   for idx in (1..string.length)
     curr_char = string[idx - 1]
-    next_char = string[idx]
     thrd_char = string[idx + 1]
 
     xyx ||= (curr_char == thrd_char)
@@ -60,7 +59,7 @@ def nice_b?(string)
 end
 
 # Tests
-tests "part b" do
+tests 'part b' do
   assert nice_b?('qjhvhtzxzqqjkmpb') == true
   assert nice_b?('xxyxx') == true
   assert nice_b?('uurcxstgmygtbstg') == false
