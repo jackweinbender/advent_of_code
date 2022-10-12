@@ -39,7 +39,14 @@ def quiet_assert(boolean)
 end
 
 def tests(title)
-  puts title.upcase.center(20, "-")
+  puts title.upcase.center(20, '-').yellow
   yield
-  puts '-'.center(20, "-")
+  puts '-'.center(20, '-').yellow
+  puts "\n"
+end
+
+def results
+  puts 'Results'.upcase.center(20, '-').blue
+  yield
+  puts ''.center(20, '-').blue
 end
