@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 input = STDIN.read.split("\n")
 
-class RPS
+class Shape
   def self.from(letter)
     case letter
     when 'A', 'X'
@@ -10,6 +10,19 @@ class RPS
       Paper.new
     when 'C', 'Z'
       Scissors.new
+    else
+      raise ArgumentError
+    end
+  end
+
+  def self.for_outcome(them, outcome)
+    case outcome
+    when 'X' # Loss
+      them.beats.new
+    when 'Y' # Tie
+      them.ties.new
+    when 'Z' # Win
+      them.loses_to.new
     else
       raise ArgumentError
     end
@@ -30,58 +43,71 @@ class RPS
   end
 
   def type
-    raise NotImplementedError
+    self.class
   end
 
   def beats
     raise NotImplementedError
   end
+
+  def loses_to
+    raise NotImplementedError
+  end
+
+  def ties
+    type
+  end
 end
 
-class Rock < RPS
+class Rock < Shape
   def points
     1
   end
 
-  def type
-    :rock
+  def beats
+    Scissors
   end
 
-  def beats
-    :scissors
+  def loses_to
+    Paper
   end
 end
 
-class Paper < RPS
+class Paper < Shape
   def points
     2
   end
 
-  def type
-    :paper
+  def beats
+    Rock
   end
 
-  def beats
-    :rock
+  def loses_to
+    Scissors
   end
 end
 
-class Scissors < RPS
+class Scissors < Shape
   def points
     3
   end
 
-  def type
-    :scissors
+  def beats
+    Paper
   end
 
-  def beats
-    :paper
+  def loses_to
+    Rock
   end
 end
 
 parsed = input.map do |line|
-  line.split(' ').map { |letter| RPS.from(letter) }
+  them, you = line.split(' ')
+  [Shape.from(them), you]
 end
 
-puts "Part 1: #{parsed.map { |player, pone| player.against(pone) }.sum}"
+part_1 = parsed.map { |them, you| them.against(Shape.from(you)) }.sum
+part_2 = parsed.map { |them, you| them.against(Shape.for_outcome(them, you)) }.sum
+
+puts "Part 1: #{part_1}"
+puts "Part 2: #{part_2}"
