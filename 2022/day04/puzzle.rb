@@ -15,15 +15,19 @@ class Assignment
   end
 end
 
-def overlapping?(a, b)
+def full_overlap?(a, b)
   a.range.subset?(b.range) || a.range.superset?(b.range)
+end
+
+def overlaps?(a, b)
+  a.range.intersect?(b.range)
 end
 
 input = $stdin.readlines(chomp: true)
               .map { |line| line.split(',').map { |r| Assignment.from(r) } }
 
-part_one = input.select { |a, b| overlapping?(a, b) }.count
-part_two = input
+part_one = input.select { |a, b| full_overlap?(a, b) }.count
+part_two = input.select { |a, b| overlaps?(a, b) }.count
 
 puts "Part 1: #{part_one}"
-# puts "Part 2: #{part_two}"
+puts "Part 2: #{part_two}"
