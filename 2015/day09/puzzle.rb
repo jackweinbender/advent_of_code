@@ -67,7 +67,6 @@ part_one_nn = input.values.map do |city|
 
   while city.nearest_unvisited_city(visited) do
     nearest = city.nearest_unvisited_city(visited)
-    puts "#{city.name} -> #{nearest[:name]}: #{nearest[:distance]}"
     distance += nearest[:distance]
     visited.add(nearest[:name])
     city = input[nearest[:name]]
@@ -77,16 +76,11 @@ part_one_nn = input.values.map do |city|
 end
 
 
-part_one_bf = input.values.permutation.to_a.map{|path|
+bruteforce_paths = input.values.permutation.to_a.map{|path|
   path.reduce(Path.new){ |acc, nxt|
     acc.go_to(nxt)
   }
 }.map(&:distance)
 
-
-part_two = input
-
-
-
-puts "Part 1: #{part_one_bf.min}"
-puts "Part 2: #{part_one_bf.max}"
+puts "Part 1: #{bruteforce_paths.min}"
+puts "Part 2: #{bruteforce_paths.max}"
