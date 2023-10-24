@@ -43,7 +43,7 @@ def calc_mem_length(str)
   return mem_length
 end
 
-tests 'examples' do
+tests 'Tests' do
 
   assert('""'.length == 2)
   assert(calc_mem_length('""') == 0)
@@ -68,6 +68,42 @@ tests 'examples' do
 
 end
 
-result = INPUT.map { |str| str.length - calc_mem_length(str) }.sum
+def escaped_size(str)
+  total_length = 2
+  str.split("").each.with_index do |char, index|
+    total_length += 1
+    case char
+    when '"'
+      total_length += 1
+    when '\\'
+      total_length += 1
+    else
+    end
 
-puts "Part A: #{result}" 
+  end
+  return total_length
+end
+
+
+tests 'Tests' do
+  assert(escaped_size('""') == 6)
+  assert(escaped_size('"abc"') == 9)
+  assert(escaped_size('"aaa\"aaa"') == 16)
+  assert(escaped_size('"\x27"') == 11)
+
+  example_set = [
+      '""',
+      '"abc"',
+      '"aaa\"aaa"',
+      '"\x27"'
+  ]
+
+  assert(example_set.map { |str| escaped_size(str) - str.length }.sum == 19)
+
+end
+
+part_a = INPUT.map { |str| str.length - calc_mem_length(str) }.sum
+part_b = INPUT.map { |str| escaped_size(str) - str.length }.sum
+
+puts "Part A: #{part_a}"
+puts "Part B: #{part_b}" 
