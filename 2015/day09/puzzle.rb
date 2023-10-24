@@ -89,4 +89,4 @@ part_two = input
 
 
 puts "Part 1: #{part_one_bf.min}"
-# puts "Part 2: #{part_two}"
+puts "Part 2: #{part_one_bf.max}"
