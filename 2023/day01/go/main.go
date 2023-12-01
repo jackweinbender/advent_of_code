@@ -9,7 +9,7 @@ import (
 	"unicode"
 )
 
-func readLines()([]string){
+func readLines() []string {
 	scanner := bufio.NewScanner(os.Stdin)
 	var input []string
 	for scanner.Scan() {
@@ -24,10 +24,14 @@ func main() {
 	PartTwo(input)
 }
 
-func PartOne(lines []string){
+/*
+	Part One
+*/
+
+func PartOne(lines []string) {
 	var total uint64
 
-	for _,line := range lines {
+	for _, line := range lines {
 		line_total, err := parseLineInts(line)
 		if err != nil {
 			fmt.Println("Failed to parse integer", err)
@@ -37,59 +41,63 @@ func PartOne(lines []string){
 	fmt.Println("Part One:", total)
 }
 
-func parseLineInts(line string)(uint64, error){
+func parseLineInts(line string) (uint64, error) {
 	var nums []string
-	for _,ch := range line {
+	for _, ch := range line {
 		if unicode.IsNumber(ch) {
 			nums = append(nums, string(ch))
 		}
 	}
-	return strconv.ParseUint(nums[0] + nums[len(nums)-1], 10, 64) 
+	return strconv.ParseUint(nums[0]+nums[len(nums)-1], 10, 64)
 }
 
-func PartTwo(lines []string){
-	
-	values := map[string]string {
-		"one": "1",
-		"two": "2",
+func PartTwo(lines []string) {
+	// Yuck, but it needs to be done. If I have to. I guess.
+	values := map[string]string{
+		"one":   "1",
+		"two":   "2",
 		"three": "3",
-		"four": "4",
-		"five": "5",
-		"six": "6",
+		"four":  "4",
+		"five":  "5",
+		"six":   "6",
 		"seven": "7",
 		"eight": "8",
-		"nine": "9",
+		"nine":  "9",
 	}
-
+	// Rather than come up with a perfect regex for the whoe thing, we'll
+	// iterate through each `slice[idx:]` to see if it starts with one of the 
+	// matches. This is important for cases where the numbers overlap, like `threeight`
 	exp, _ := regexp.Compile(`^(\d|one|two|three|four|five|six|seven|eight|nine)`)
-	var total uint
+	
+	var total uint64
+	
 	for _, line := range lines {
-
 		var nums []string
 		for idx := range line {
 			match := exp.FindString(line[idx:])
-			if match != "" {
-				nums = append(nums, match)
+			if match == "" {
+				continue // skip iteration if the slice doesn't start with a match
 			}
-		}
-		first := values[nums[0]]
-		if first == "" {
-			first += nums[0] 
+			nums = append(nums, match)
 		}
 
-		last := values[nums[len(nums)-1]]
-		if last == "" {
-			last += nums[len(nums)-1]
-		}
-
-		cal_value := first + last
-
-		line_total, err := strconv.ParseUint(cal_value, 10, 64)
-			
+		first := normalizeNums(values, nums[0])
+		last := normalizeNums(values, nums[len(nums)-1])
+		// We can reuse this guy from Part 1
+		line_total, err := parseLineInts(first + last)
 		if err != nil {
-			fmt.Println(cal_value, "can't be parsed as an integer.")
+			fmt.Println("Failed to parse integer", err)
 		}
-		total += uint(line_total)
+		total += line_total
 	}
 	fmt.Println("Part Two:", total)
+}
+
+func normalizeNums(m map[string]string, k string) string {
+	value := m[k]
+	if value == "" {
+		return k
+	} else {
+		return value
+	}
 }
