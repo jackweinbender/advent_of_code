@@ -9,37 +9,42 @@ import (
 	"unicode"
 )
 
-func main() {
+func readLines()([]string){
 	scanner := bufio.NewScanner(os.Stdin)
 	var input []string
-
 	for scanner.Scan() {
 		input = append(input, scanner.Text())
 	}
+	return input
+}
 
+func main() {
+	input := readLines()
 	PartOne(input)
 	PartTwo(input)
 }
 
 func PartOne(lines []string){
-	var total uint
+	var total uint64
+
 	for _,line := range lines {
-		var nums []rune
-		for _,ch := range line {
-			if unicode.IsNumber(ch) {
-				nums = append(nums, ch)
-			}
-		}
-		cal_value := string([]rune{nums[0], nums[len(nums)-1]})
-		line_total, err := strconv.ParseUint(cal_value, 10, 64)
-		
+		line_total, err := parseLineInts(line)
 		if err != nil {
-			fmt.Println(cal_value, "can't be parsed as an integer.")
+			fmt.Println("Failed to parse integer", err)
 		}
-		
-		total += uint(line_total)
+		total += line_total
 	}
 	fmt.Println("Part One:", total)
+}
+
+func parseLineInts(line string)(uint64, error){
+	var nums []string
+	for _,ch := range line {
+		if unicode.IsNumber(ch) {
+			nums = append(nums, string(ch))
+		}
+	}
+	return strconv.ParseUint(nums[0] + nums[len(nums)-1], 10, 64) 
 }
 
 func PartTwo(lines []string){
