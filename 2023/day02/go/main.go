@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strconv"
+	"shared"
 	"strings"
 )
 
@@ -35,10 +35,7 @@ func ParseGame(input string)(Game){
 	gamestr := strings.Split(arr[0], " ")
 	roundsstr := strings.Split(arr[1], "; ")
 
-	gameId, err := strconv.ParseUint(gamestr[1], 10, 64)
-	if err != nil {
-		fmt.Println("Failed to parse string to int:", arr[1])
-	}
+	gameId, _ := shared.ParseInt(gamestr[1])
 
 	game := Game{
 		id: int(gameId),
@@ -64,11 +61,8 @@ func ParseRound(input string)(Round){
 	for _,str := range colors {
 		arr := strings.Split(str, " ")
 		color := arr[1]
-		count, err := strconv.ParseUint(arr[0], 10, 64)
+		count, _ := shared.ParseInt(arr[0])
 
-		if err != nil {
-			fmt.Println("Failed to parse string to int:", arr[1])
-		}
 		round[color] = int(count)
 	}
 	return round
