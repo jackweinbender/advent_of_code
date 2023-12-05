@@ -1,12 +1,19 @@
 package shared
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strconv"
 )
 
-func Testing() {
-	fmt.Print("Testing")
+func ReadLines() []string {
+	scanner := bufio.NewScanner(os.Stdin)
+	var input []string
+	for scanner.Scan() {
+		input = append(input, scanner.Text())
+	}
+	return input
 }
 
 func ParseInt(s string)(int64, error){
