@@ -26,7 +26,7 @@ func isSymbol(c Coordinate, g Graph)(bool){
 	return true
 }
 
-func touchesSymbol(n PartNumber, g Graph)(bool){
+func getNumberBoundary(n PartNumber, g Graph)([]Coordinate){
 	rindex := n.loc.col - 1
 	lindex := n.loc.col + n.length
 	
@@ -44,8 +44,12 @@ func touchesSymbol(n PartNumber, g Graph)(bool){
     coords = append(coords, Coordinate{ row: n.loc.row-1, col: n.loc.col+i })
 		coords = append(coords, Coordinate{ row: n.loc.row+1, col: n.loc.col+i })
 	}
+	return coords
+}
 
-	for _,coord := range coords {
+func touchesSymbol(n PartNumber, g Graph)(bool){
+	
+	for _,coord := range getNumberBoundary(n, g) {
 		if coord.row < 0 || coord.col < 0 {
 			continue
 		}
@@ -102,7 +106,57 @@ func PartOne(lines []string){
 	}
 	fmt.Println("Part One:", total)
 }
-func PartTwo(lines []string){}
+
+func isGearSymbol(c Coordinate, g Graph)(bool){
+	v := rune(g[c.row][c.col])
+	if v == '*' {
+		return true
+	} else {
+		return false
+	}
+}
+
+func adjascentGears(n PartNumber, g Graph)([]Coordinate){
+	gears := []Coordinate{}
+	for _,coord := range getNumberBoundary(n,g) {
+		if coord.row < 0 || coord.col < 0 {
+			continue
+		}
+		if coord.row >= len(g) || coord.col >= len(g[0]){
+			continue
+		}
+		if isGearSymbol(coord, g){
+			gears = append(gears, coord)
+		}
+	}
+	return gears
+}
+
+func PartTwo(lines []string){
+
+	numbers := getNumbers(lines)
+	gears := map[Coordinate][]PartNumber{}
+
+	for _,number := range numbers {
+		adjascent := adjascentGears(number, lines)
+		for _,g := range adjascent {
+			_, ok := gears[g]
+			if ok {
+				gears[g] = append(gears[g], number)
+			} else {
+				gears[g] = []PartNumber{ number }
+			}
+		}
+	}
+	total := 0
+	
+	for _,nums :=range gears {
+		if len(nums) == 2 {
+			total += valueOf(nums[0], lines) * valueOf(nums[1], lines)
+		}
+	}
+	fmt.Println("Part Two:", total)
+}
 
 func main() {
 	input := shared.ReadLines()
