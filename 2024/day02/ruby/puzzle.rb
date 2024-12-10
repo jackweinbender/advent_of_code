@@ -1,58 +1,40 @@
 #! /usr/bin/env ruby
 
-
 input = $stdin.readlines(chomp: true).map { |e| e.split(' ').map(&:strip).map(&:to_i) }
 
-def set_dir(left, right)
-  return :asc if left < right
-  return :desc
+def direction(left, right)
+    return :asc if left < right
+    return :desc
 end
 
-# The levels are either all increasing or all decreasing.
-# Any two adjacent levels differ by at least one and at most three.
-def consistent?(left, right, dir)
-  if dir == :asc
-    left < right
-  else
-    left > right
-  end
-end
-
-def gradual?(left, right, dir)
+def gradual?(left, right)
   delta = (left - right).abs
   delta >= 1 && delta <= 3
 end
 
-def safe?(arr, dampened=false)
-  idx = 0
+def safe?(arr)
   dir = nil
-  while idx < arr.length - 1
-    jdx = idx+1
-    left, right = arr[idx], arr[jdx]
+  arr.each_cons(2).all? do |pair|
+    left, right = pair
+    return false unless gradual?(left, right)
     if dir.nil?
-      dir = set_dir(left, right)
+      dir = direction(left, right)
+      true
     end
-
-    ok = consistent?(left, right, dir) && gradual?(left, right, dir)
-
-    unless ok
-      if dampened
-        jdx += 1
-        right = arr[jdx]
-        return false unless consistent?(left, right, dir) && gradual?(left, right, dir)
-      else
-        return false
-      end
-    end
-
-    idx = jdx
+    return false unless dir == direction(left, right)
+    true
   end
-
-  true
 end
 
-part_one = input.map{ |e| safe?(e) ? 1 : 0 }.sum
-part_two = input.map{ |e| safe?(e, true) ? 1 : 0 }.sum
+part_one = input.select { |e| safe?(e) }.length
+part_two = input.select{ |report|
+  subreports = report.map.with_index do |_, idx|
+    r = report.dup
+    r.delete_at(idx)
+    safe?(r)
+  end
+  subreports.any?
+}.length
 
 puts "Part 1: #{part_one}"
 puts "Part 2: #{part_two}"
